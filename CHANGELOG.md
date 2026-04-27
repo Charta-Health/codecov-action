@@ -1,3 +1,21 @@
+## 0.3.7
+
+### Bug Fixes 🐛
+
+- Restore release branch CI trigger with concurrency group by @MathurAditya724 in [50346018](https://github.com/getsentry/codecov-action/commit/50346018713cd2af5ca575f3090f97095b27d118)
+
+### Other
+
+- Update .craft.yml by @MathurAditya724 in [f43d9dd5](https://github.com/getsentry/codecov-action/commit/f43d9dd5d9477f04fc3f34c20f0c1f83706f0474)
+- Update .craft.yml by @MathurAditya724 in [845691d4](https://github.com/getsentry/codecov-action/commit/845691d4fa0de95c6aad0beb7c9d1e69759aa422)
+- Update build.yml by @MathurAditya724 in [a2ddfa3d](https://github.com/getsentry/codecov-action/commit/a2ddfa3d8ec074e2410ae55c97eead83c253ba9d)
+
+## 0.3.3
+
+### Bug Fixes 🐛
+
+- Add statusProvider to prevent release workflow from blocking itself by @MathurAditya724 in [a793b59e](https://github.com/getsentry/codecov-action/commit/a793b59e8c3e515484754748c9dbdd43c22c6aa4)
+
 ## 0.3.1
 
 - Update CHANGELOG.md by @MathurAditya724 in [78a2a4a5](https://github.com/getsentry/codecov-action/commit/78a2a4a5077c33de3a587b64d3462d98b49f9217)

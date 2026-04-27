@@ -35671,6 +35671,9 @@ class JUnitParser {
             attributeNamePrefix: "@_",
             textNodeName: "#text",
             parseAttributeValue: true,
+            // Use object form to get the v5.5.10+ default of maxTotalExpansions: Infinity
+            // The boolean form still hardcodes maxTotalExpansions: 1000
+            processEntities: { enabled: true },
         });
     }
     /**
@@ -231743,6 +231746,7 @@ async function findCoverageFiles(config) {
     const defaultPatterns = [
         "**/clover.xml",
         "**/cobertura.xml",
+        "**/coverage.cobertura.xml",
         "**/coverage.xml",
         "**/jacoco.xml",
         "**/lcov.info",

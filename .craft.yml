@@ -1,12 +1,7 @@
 minVersion: "2.21.2"
+noMerge: false
 changelog:
   policy: auto
-statusProvider:
-  name: github
-  config:
-    contexts:
-      - test_job
-      - build_website
 artifactProvider:
   name: github
   config:
