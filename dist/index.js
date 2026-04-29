@@ -29966,15 +29966,23 @@ const PatchAnalyzer = {
         const totalLines = totalCovered + totalMissed;
         const unavailableReason = matchedFiles.size === 0
             ? "no changed files matched coverage data"
-            : totalLines === 0
-                ? "no executable patch lines found"
-                : undefined;
+            : undefined;
+        const noExecutablePatchLines = matchedFiles.size > 0 && totalLines === 0;
+        const reason = noExecutablePatchLines
+            ? "no executable patch lines found"
+            : unavailableReason;
         const status = unavailableReason
             ? "unavailable"
-            : unmatchedFiles.length > 0
-                ? "incomplete"
-                : "complete";
-        const percentage = status === "unavailable" ? 0 : (totalCovered / totalLines) * 100;
+            : noExecutablePatchLines
+                ? "complete"
+                : unmatchedFiles.length > 0
+                    ? "incomplete"
+                    : "complete";
+        const percentage = status === "unavailable"
+            ? 0
+            : totalLines === 0
+                ? 100
+                : (totalCovered / totalLines) * 100;
         // Warn when no changed files could be matched to coverage data
         if (unavailableReason === "no changed files matched coverage data" &&
             unmatchedFiles.length > 0) {
@@ -29986,8 +29994,8 @@ const PatchAnalyzer = {
                 `  Sample coverage paths: ${sampleCoveragePaths.join(", ")}\n` +
                 `  This usually indicates a path format mismatch between your coverage tool and the repository.`);
         }
-        else if (status === "unavailable" && unavailableReason) {
-            coreExports.warning(`Patch coverage unavailable: ${unavailableReason}.`);
+        else if (noExecutablePatchLines) {
+            coreExports.info("  No executable patch lines found; treating patch coverage as 100%.");
         }
         else if (unmatchedFiles.length > 0) {
             coreExports.info(`  Some changed files had no coverage data: ${unmatchedFiles.join(", ")}`);
@@ -30002,7 +30010,7 @@ const PatchAnalyzer = {
         coreExports.info(`  Percentage: ${status === "unavailable" ? "N/A" : `${percentage.toFixed(2)}%`}`);
         return {
             status,
-            reason: unavailableReason,
+            reason,
             coveredLines: totalCovered,
             missedLines: totalMissed,
             totalLines,
@@ -30096,9 +30104,12 @@ const ThresholdChecker = {
             };
         }
         const isSuccess = patchCoverage.percentage >= target;
+        const descriptionSuffix = patchCoverage.reason === "no executable patch lines found"
+            ? " (no executable patch lines found)"
+            : "";
         return {
             status: isSuccess ? "success" : "failure",
-            description: `${patchCoverage.percentage.toFixed(2)}% ${isSuccess ? ">=" : "<"} target ${target}%`,
+            description: `${patchCoverage.percentage.toFixed(2)}% ${isSuccess ? ">=" : "<"} target ${target}%${descriptionSuffix}`,
             informational,
         };
     },
@@ -33394,6 +33405,9 @@ class ReportFormatter {
         }
         const patchEmoji = patchCoverage.percentage < patchTarget ? ":x:" : ":white_check_mark:";
         let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**.`;
+        if (patchCoverage.reason === "no executable patch lines found") {
+            patchMessage += " No executable patch lines found.";
+        }
         if (patchMissedLines > 0) {
             patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
         }

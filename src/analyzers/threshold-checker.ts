@@ -125,12 +125,16 @@ export const ThresholdChecker = {
     }
 
     const isSuccess = patchCoverage.percentage >= target;
+    const descriptionSuffix =
+      patchCoverage.reason === "no executable patch lines found"
+        ? " (no executable patch lines found)"
+        : "";
 
     return {
       status: isSuccess ? "success" : "failure",
       description: `${patchCoverage.percentage.toFixed(2)}% ${
         isSuccess ? ">=" : "<"
-      } target ${target}%`,
+      } target ${target}%${descriptionSuffix}`,
       informational,
     };
   },

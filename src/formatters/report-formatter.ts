@@ -538,6 +538,9 @@ export class ReportFormatter {
     const patchEmoji =
       patchCoverage.percentage < patchTarget ? ":x:" : ":white_check_mark:";
     let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**.`;
+    if (patchCoverage.reason === "no executable patch lines found") {
+      patchMessage += " No executable patch lines found.";
+    }
     if (patchMissedLines > 0) {
       patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
     }
