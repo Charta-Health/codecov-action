@@ -191,10 +191,124 @@ index 0000000..e69de29
       mockCoverage,
     );
 
-    expect(result.status).toBe("incomplete");
+    expect(result.status).toBe("complete");
     expect(result.changedFiles).toEqual(["src/utils.ts", "src/new-file.ts"]);
     expect(result.matchedFiles).toEqual(["src/utils.ts"]);
+    expect(result.unmatchedFiles).toEqual(["src/new-file.ts"]);
     expect(result.changedFiles).not.toContain("src/removed.ts");
+  });
+
+  it("should ignore non-coverable changed files when deciding completeness", () => {
+    const diffWithSourceTestsAndWorkflow = `diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 1111111..2222222 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -1,0 +2,1 @@
++name: CI
+diff --git a/src/utils.ts b/src/utils.ts
+index 83db48f..bf269f4 100644
+--- a/src/utils.ts
++++ b/src/utils.ts
+@@ -10,0 +13,3 @@
++export function subtract(a: number, b: number): number {
++  return a - b;
++}
+diff --git a/tests/unit/utils.test.ts b/tests/unit/utils.test.ts
+index 3333333..4444444 100644
+--- a/tests/unit/utils.test.ts
++++ b/tests/unit/utils.test.ts
+@@ -1,0 +2,1 @@
++it("covers subtract", () => {});
+diff --git a/src/utils.test.ts b/src/utils.test.ts
+index 5555555..6666666 100644
+--- a/src/utils.test.ts
++++ b/src/utils.test.ts
+@@ -1,0 +2,1 @@
++it("covers utils", () => {});
+`;
+
+    const result = PatchAnalyzer.analyzePatchCoverage(
+      diffWithSourceTestsAndWorkflow,
+      mockCoverage,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.percentage).toBe(100);
+    expect(result.changedFiles).toEqual([
+      ".github/workflows/ci.yaml",
+      "src/utils.ts",
+      "tests/unit/utils.test.ts",
+      "src/utils.test.ts",
+    ]);
+    expect(result.matchedFiles).toEqual(["src/utils.ts"]);
+    expect(result.unmatchedFiles).toEqual([]);
+    expect(result.ignoredFiles).toEqual([
+      ".github/workflows/ci.yaml",
+      "tests/unit/utils.test.ts",
+      "src/utils.test.ts",
+    ]);
+  });
+
+  it("should treat only non-coverable changed files as clean patch coverage", () => {
+    const testOnlyDiff = `diff --git a/tests/unit/utils.test.ts b/tests/unit/utils.test.ts
+index 3333333..4444444 100644
+--- a/tests/unit/utils.test.ts
++++ b/tests/unit/utils.test.ts
+@@ -1,0 +2,1 @@
++it("covers subtract", () => {});
+diff --git a/.github/workflows/ci.yaml b/.github/workflows/ci.yaml
+index 1111111..2222222 100644
+--- a/.github/workflows/ci.yaml
++++ b/.github/workflows/ci.yaml
+@@ -1,0 +2,1 @@
++name: CI
+`;
+
+    const result = PatchAnalyzer.analyzePatchCoverage(
+      testOnlyDiff,
+      mockCoverage,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.reason).toBe("no coverable changed files found");
+    expect(result.totalLines).toBe(0);
+    expect(result.percentage).toBe(100);
+    expect(result.matchedFiles).toEqual([]);
+    expect(result.unmatchedFiles).toEqual([]);
+    expect(result.ignoredFiles).toEqual([
+      "tests/unit/utils.test.ts",
+      ".github/workflows/ci.yaml",
+    ]);
+  });
+
+  it("should keep 100% coverage when matched files have no missed lines", () => {
+    const diffWithCommentAndUncoveredSource = `diff --git a/src/utils.ts b/src/utils.ts
+index 83db48f..bf269f4 100644
+--- a/src/utils.ts
++++ b/src/utils.ts
+@@ -98,0 +99,1 @@
++// Comment line 99
+diff --git a/src/missing.ts b/src/missing.ts
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/src/missing.ts
+@@ -0,0 +1,1 @@
++export const missing = true;
+`;
+
+    const result = PatchAnalyzer.analyzePatchCoverage(
+      diffWithCommentAndUncoveredSource,
+      mockCoverage,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.reason).toBeUndefined();
+    expect(result.totalLines).toBe(0);
+    expect(result.percentage).toBe(100);
+    expect(result.matchedFiles).toEqual(["src/utils.ts"]);
+    expect(result.unmatchedFiles).toEqual(["src/missing.ts"]);
+    expect(result.ignoredFiles).toEqual([]);
   });
 
   it("should match absolute coverage paths against relative diff paths via suffix", () => {

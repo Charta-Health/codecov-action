@@ -6,7 +6,7 @@ import type {
 } from "../types/coverage.js";
 
 export interface PatchCoverageResults {
-  status: "complete" | "incomplete" | "unavailable";
+  status: "complete" | "unavailable";
   reason?: string;
   coveredLines: number;
   missedLines: number;
@@ -16,6 +16,7 @@ export interface PatchCoverageResults {
   changedFiles: string[];
   matchedFiles: string[];
   unmatchedFiles: string[];
+  ignoredFiles?: string[];
 }
 
 export interface PatchFileCoverage {
@@ -31,6 +32,34 @@ export interface PatchFileCoverage {
  */
 function normalizePath(filePath: string): string {
   return filePath.replace(/\\/g, "/").replace(/^\.?\//, "");
+}
+
+function isNonCoverableChangedFile(filePath: string): boolean {
+  const normalized = normalizePath(filePath);
+
+  if (
+    normalized.startsWith(".github/") ||
+    normalized.startsWith(".circleci/") ||
+    normalized.startsWith(".changeset/") ||
+    normalized.startsWith("docs/")
+  ) {
+    return true;
+  }
+
+  if (
+    normalized.startsWith("tests/") ||
+    normalized.includes("/tests/") ||
+    normalized.includes("/__tests__/") ||
+    normalized.includes("/__mocks__/") ||
+    normalized.includes("/__snapshots__/")
+  ) {
+    return true;
+  }
+
+  return (
+    /\.(test|spec|stories)\.[cm]?[jt]sx?$/.test(normalized) ||
+    /\.(md|mdx|txt|ya?ml|toml|lock|snap)$/.test(normalized)
+  );
 }
 
 /**
@@ -106,6 +135,7 @@ export const PatchAnalyzer = {
       changedFiles: [],
       matchedFiles: [],
       unmatchedFiles: [],
+      ignoredFiles: [],
     };
   },
 
@@ -121,6 +151,7 @@ export const PatchAnalyzer = {
     const changedFiles = new Set<string>();
     const matchedFiles = new Set<string>();
     const unmatchedFiles: string[] = [];
+    const ignoredFiles: string[] = [];
 
     let totalCovered = 0;
     let totalMissed = 0;
@@ -148,7 +179,11 @@ export const PatchAnalyzer = {
       );
 
       if (!coverageFile) {
-        unmatchedFiles.push(diffFile.to);
+        if (isNonCoverableChangedFile(diffFile.to)) {
+          ignoredFiles.push(diffFile.to);
+        } else {
+          unmatchedFiles.push(diffFile.to);
+        }
         continue;
       }
       matchedFiles.add(diffFile.to);
@@ -214,20 +249,20 @@ export const PatchAnalyzer = {
 
     const totalLines = totalCovered + totalMissed;
     const unavailableReason =
-      matchedFiles.size === 0
+      matchedFiles.size === 0 && unmatchedFiles.length > 0
         ? "no changed files matched coverage data"
         : undefined;
+    const noCoverableChangedFiles =
+      matchedFiles.size === 0 &&
+      unmatchedFiles.length === 0 &&
+      ignoredFiles.length > 0;
     const noExecutablePatchLines = matchedFiles.size > 0 && totalLines === 0;
-    const reason = noExecutablePatchLines
-      ? "no executable patch lines found"
-      : unavailableReason;
-    const status = unavailableReason
-      ? "unavailable"
-      : noExecutablePatchLines
-        ? "complete"
-        : unmatchedFiles.length > 0
-          ? "incomplete"
-          : "complete";
+    const reason = noCoverableChangedFiles
+      ? "no coverable changed files found"
+      : noExecutablePatchLines && unmatchedFiles.length === 0
+        ? "no executable patch lines found"
+        : unavailableReason;
+    const status = unavailableReason ? "unavailable" : "complete";
     const percentage =
       status === "unavailable"
         ? 0
@@ -249,13 +284,22 @@ export const PatchAnalyzer = {
           `  Sample coverage paths: ${sampleCoveragePaths.join(", ")}\n` +
           `  This usually indicates a path format mismatch between your coverage tool and the repository.`,
       );
+    } else if (unmatchedFiles.length > 0) {
+      core.info(
+        `  Some changed files had no coverage data: ${unmatchedFiles.join(", ")}`,
+      );
     } else if (noExecutablePatchLines) {
       core.info(
         "  No executable patch lines found; treating patch coverage as 100%.",
       );
-    } else if (unmatchedFiles.length > 0) {
+    } else if (noCoverableChangedFiles) {
       core.info(
-        `  Some changed files had no coverage data: ${unmatchedFiles.join(", ")}`,
+        "  No coverable changed files found; treating patch coverage as 100%.",
+      );
+    }
+    if (ignoredFiles.length > 0) {
+      core.info(
+        `  Ignored non-coverable changed files: ${ignoredFiles.join(", ")}`,
       );
     }
 
@@ -264,6 +308,7 @@ export const PatchAnalyzer = {
     core.info(`  Changed Files: ${changedFiles.size}`);
     core.info(`  Matched Files: ${matchedFiles.size}`);
     core.info(`  Unmatched Files: ${unmatchedFiles.length}`);
+    core.info(`  Ignored Files: ${ignoredFiles.length}`);
     core.info(`  Covered Lines: ${totalCovered}`);
     core.info(`  Missed Lines: ${totalMissed}`);
     core.info(
@@ -283,6 +328,7 @@ export const PatchAnalyzer = {
       changedFiles: [...changedFiles],
       matchedFiles: [...matchedFiles],
       unmatchedFiles,
+      ignoredFiles,
     };
   },
 };
