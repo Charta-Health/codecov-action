@@ -109,8 +109,10 @@ index 0000000..e69de29
     );
 
     expect(result.totalLines).toBe(0);
-    expect(result.percentage).toBe(100); // Default when no lines found
+    expect(result.status).toBe("unavailable");
+    expect(result.percentage).toBe(0);
     expect(result.changedFiles).toEqual(["src/new-file.ts"]);
+    expect(result.matchedFiles).toEqual([]);
     expect(result.unmatchedFiles).toEqual(["src/new-file.ts"]);
   });
 
@@ -186,7 +188,9 @@ index 0000000..e69de29
       mockCoverage,
     );
 
+    expect(result.status).toBe("incomplete");
     expect(result.changedFiles).toEqual(["src/utils.ts", "src/new-file.ts"]);
+    expect(result.matchedFiles).toEqual(["src/utils.ts"]);
     expect(result.changedFiles).not.toContain("src/removed.ts");
   });
 
@@ -274,7 +278,9 @@ index 0000000..e69de29
     );
 
     expect(result.totalLines).toBe(0);
-    expect(result.percentage).toBe(100);
+    expect(result.status).toBe("unavailable");
+    expect(result.percentage).toBe(0);
+    expect(result.matchedFiles).toEqual([]);
     expect(result.unmatchedFiles).toEqual(["src/utils.ts"]);
   });
 

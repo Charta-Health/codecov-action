@@ -95,13 +95,35 @@ export const ThresholdChecker = {
     if (!patchCoverage) {
       return {
         status: "success",
-        description: "Patch coverage: N/A (not in PR context)",
+        description: "Patch coverage unavailable: not in PR context",
+        informational,
+      };
+    }
+
+    if (patchCoverage.status === "unavailable") {
+      return {
+        status: "success",
+        description: `Patch coverage unavailable: ${
+          patchCoverage.reason ?? "unable to calculate patch coverage"
+        }`,
         informational,
       };
     }
 
     // Default target to 80% if set to "auto"
     const target = typeof config.target === "number" ? config.target : 80;
+    if (patchCoverage.status === "incomplete") {
+      return {
+        status: "success",
+        description: `${patchCoverage.percentage.toFixed(
+          2,
+        )}% (incomplete: ${patchCoverage.matchedFiles.length} matched files, ${
+          patchCoverage.unmatchedFiles.length
+        } unmatched files; target ${target}%)`,
+        informational,
+      };
+    }
+
     const isSuccess = patchCoverage.percentage >= target;
 
     return {

@@ -262,8 +262,8 @@ describe("ReportFormatter", () => {
       expect(comment).toContain(
         ":white_check_mark: Patch coverage is **77.56%**.",
       );
-      // Should show project misses as separate info
-      expect(comment).toContain("Project has **1348** uncovered lines.");
+      // Should not show project-wide misses in the patch headline
+      expect(comment).not.toContain("Project has **1348** uncovered lines.");
       // Should NOT have the old conflated message format
       expect(comment).not.toContain("with **1348 lines** missing coverage");
     });
@@ -289,8 +289,8 @@ describe("ReportFormatter", () => {
 
       // Should show X because patch coverage is below configured target (80%)
       expect(comment).toContain(":x: Patch coverage is **77.56%**.");
-      // Should show project misses as separate info
-      expect(comment).toContain("Project has **500** uncovered lines.");
+      // Should not show project-wide misses in the patch headline
+      expect(comment).not.toContain("Project has **500** uncovered lines.");
     });
 
     it("should show checkmark with no project misses message when totalMisses is 0", () => {
@@ -318,7 +318,7 @@ describe("ReportFormatter", () => {
       expect(comment).not.toContain("uncovered lines");
     });
 
-    it("should use lineRate as fallback when patchCoverageRate is undefined", () => {
+    it("should not use project lineRate as patch fallback when patchCoverageRate is undefined", () => {
       const coverageResults: AggregatedCoverageResults = {
         totalStatements: 1000,
         coveredStatements: 850,
@@ -335,10 +335,8 @@ describe("ReportFormatter", () => {
 
       const comment = formatter.formatReport(undefined, coverageResults);
 
-      // Should use lineRate (85%) which is >= 80%, so checkmark
-      expect(comment).toContain(
-        ":white_check_mark: Patch coverage is **85.00%**.",
-      );
+      expect(comment).toContain("Patch coverage unavailable");
+      expect(comment).not.toContain("Patch coverage is **85.00%**");
     });
 
     it("should show all files with missing lines when filesMode is all", () => {
@@ -508,9 +506,9 @@ describe("ReportFormatter", () => {
         expect(comment).toContain("Files with missing lines (2)");
         // Full paths should be shown
         expect(comment).toContain("`src/args.rs`");
-        expect(comment).toContain("2 Missing");
+        expect(comment).toContain("Missing: L20-L21");
         expect(comment).toContain("`src/types/bytes.rs`");
-        expect(comment).toContain("1 partials");
+        expect(comment).toContain("Partial: L10");
         // clean-file.rs has no missing or partial lines in the patch, should be excluded
         expect(comment).not.toContain("clean-file.rs");
       });
@@ -548,7 +546,7 @@ describe("ReportFormatter", () => {
         );
 
         expect(comment).toContain("Files with missing lines (1)");
-        expect(comment).toContain("2 Missing and 1 partials");
+        expect(comment).toContain("Missing: L4-L5<br>Partial: L3");
       });
 
       it("should hide file table when patchFileBreakdown has no files with missing lines", () => {
@@ -635,7 +633,7 @@ describe("ReportFormatter", () => {
         expect(comment).toContain("`src/dot-prefixed.ts`");
       });
 
-      it("should still show project uncovered lines in summary when patchFileBreakdown is provided", () => {
+      it("should show PR-specific uncovered lines in summary when patchFileBreakdown is provided", () => {
         const comment = formatter.formatReport(
           undefined,
           coverageWithMissingFiles,
@@ -644,8 +642,58 @@ describe("ReportFormatter", () => {
           },
         );
 
-        // The summary line should still mention project-wide uncovered lines
-        expect(comment).toContain("Project has **20** uncovered lines.");
+        expect(comment).toContain("PR has **2** uncovered lines.");
+        expect(comment).not.toContain("Project has **20** uncovered lines.");
+      });
+
+      it("should show incomplete patch state in the summary", () => {
+        const comment = formatter.formatReport(
+          undefined,
+          coverageWithMissingFiles,
+          {
+            patchCoverage: {
+              status: "incomplete",
+              coveredLines: 8,
+              missedLines: 2,
+              totalLines: 10,
+              percentage: 80,
+              fileBreakdown: patchFileBreakdown,
+              changedFiles: ["src/args.rs", "src/generated.rs"],
+              matchedFiles: ["src/args.rs"],
+              unmatchedFiles: ["src/generated.rs"],
+            },
+            patchFileBreakdown,
+          },
+        );
+
+        expect(comment).toContain(
+          "Patch coverage is **80.00%**, but incomplete (1 matched files, 1 unmatched files).",
+        );
+      });
+
+      it("should show unavailable patch state in the summary", () => {
+        const comment = formatter.formatReport(
+          undefined,
+          coverageWithMissingFiles,
+          {
+            patchCoverage: {
+              status: "unavailable",
+              reason: "could not compute local git diff",
+              coveredLines: 0,
+              missedLines: 0,
+              totalLines: 0,
+              percentage: 0,
+              fileBreakdown: [],
+              changedFiles: [],
+              matchedFiles: [],
+              unmatchedFiles: [],
+            },
+          },
+        );
+
+        expect(comment).toContain(
+          "Patch coverage unavailable: could not compute local git diff.",
+        );
       });
     });
 

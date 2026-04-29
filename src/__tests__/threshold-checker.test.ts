@@ -152,6 +152,9 @@ describe("ThresholdChecker", () => {
       percentage: 80,
       fileBreakdown: [],
       changedFiles: [],
+      matchedFiles: [],
+      unmatchedFiles: [],
+      status: "complete",
     };
 
     it("should pass when patch coverage exceeds target", () => {
@@ -180,7 +183,41 @@ describe("ThresholdChecker", () => {
       const config = { target: 80, threshold: null, informational: false };
       const result = ThresholdChecker.checkPatchStatus(null, config);
       expect(result.status).toBe("success");
-      expect(result.description).toContain("N/A");
+      expect(result.description).toContain("unavailable");
+    });
+
+    it("should report unavailable patch coverage without failing", () => {
+      const config = { target: 80, threshold: null, informational: false };
+      const result = ThresholdChecker.checkPatchStatus(
+        {
+          ...mockPatchCoverage,
+          status: "unavailable",
+          reason: "could not compute local git diff",
+          percentage: 0,
+        },
+        config,
+      );
+      expect(result.status).toBe("success");
+      expect(result.description).toContain("Patch coverage unavailable");
+      expect(result.description).toContain("could not compute local git diff");
+    });
+
+    it("should report incomplete patch coverage without failing hard", () => {
+      const config = { target: 90, threshold: null, informational: false };
+      const result = ThresholdChecker.checkPatchStatus(
+        {
+          ...mockPatchCoverage,
+          status: "incomplete",
+          percentage: 50,
+          matchedFiles: ["src/matched.ts"],
+          unmatchedFiles: ["src/unmatched.ts"],
+        },
+        config,
+      );
+      expect(result.status).toBe("success");
+      expect(result.description).toContain("incomplete");
+      expect(result.description).toContain("1 matched files");
+      expect(result.description).toContain("1 unmatched files");
     });
 
     it("should use default target of 80% when target is auto", () => {

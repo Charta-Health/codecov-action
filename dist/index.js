@@ -2,15 +2,16 @@ import * as fs from 'node:fs';
 import fs__default from 'node:fs';
 import * as path$1 from 'node:path';
 import path__default from 'node:path';
+import { execFileSync } from 'node:child_process';
 import require$$0$4 from 'os';
 import require$$0$5 from 'crypto';
 import require$$0$6 from 'fs';
-import require$$1$7 from 'path';
+import require$$1$8 from 'path';
 import require$$2$4 from 'http';
-import require$$1$2 from 'https';
+import require$$1$3 from 'https';
 import require$$0$a from 'net';
-import require$$1$4 from 'tls';
-import require$$1$3 from 'events';
+import require$$1$5 from 'tls';
+import require$$1$4 from 'events';
 import require$$0$9 from 'assert';
 import require$$0$7 from 'util';
 import require$$0$b from 'stream';
@@ -18,13 +19,13 @@ import require$$0$8 from 'buffer';
 import require$$8 from 'querystring';
 import require$$14 from 'stream/web';
 import require$$0$d from 'node:stream';
-import require$$1$5 from 'node:util';
+import require$$1$6 from 'node:util';
 import require$$0$c from 'node:events';
 import require$$0$e from 'worker_threads';
 import require$$2$5 from 'perf_hooks';
 import require$$5$1 from 'util/types';
 import require$$4$2 from 'async_hooks';
-import require$$1$6 from 'console';
+import require$$1$7 from 'console';
 import Url from 'url';
 import zlib from 'zlib';
 import require$$6$1 from 'string_decoder';
@@ -34,15 +35,15 @@ import require$$6$2 from 'timers';
 import require$$0$g, { createHash } from 'node:crypto';
 import * as fs$1 from 'node:fs/promises';
 import fs__default$1 from 'node:fs/promises';
-import * as os from 'node:os';
-import os__default from 'node:os';
+import * as require$$1$2 from 'node:os';
+import require$$1__default from 'node:os';
 import require$$2$7 from 'node:process';
-import require$$1$8 from 'node:http';
+import require$$1$9 from 'node:http';
 import require$$2$8 from 'node:https';
 import require$$3$2 from 'node:zlib';
-import require$$1$9 from 'tty';
+import require$$1$a from 'tty';
 import require$$2$9 from 'node:buffer';
-import require$$1$a from 'fs/promises';
+import require$$1$b from 'fs/promises';
 import require$$0$h from 'constants';
 import require$$2$b from 'node:url';
 import require$$2$a from 'node:string_decoder';
@@ -425,10 +426,10 @@ var hasRequiredTunnel$1;
 function requireTunnel$1 () {
 	if (hasRequiredTunnel$1) return tunnel$1;
 	hasRequiredTunnel$1 = 1;
-	var tls = require$$1$4;
+	var tls = require$$1$5;
 	var http = require$$2$4;
-	var https = require$$1$2;
-	var events = require$$1$3;
+	var https = require$$1$3;
+	var events = require$$1$4;
 	var util = require$$0$7;
 
 
@@ -1807,7 +1808,7 @@ function requireSbmh () {
 	 * by Hongli Lai at: https://github.com/FooBarWidget/boyer-moore-horspool
 	 */
 	const EventEmitter = require$$0$c.EventEmitter;
-	const inherits = require$$1$5.inherits;
+	const inherits = require$$1$6.inherits;
 
 	function SBMH (needle) {
 	  if (typeof needle === 'string') {
@@ -2016,7 +2017,7 @@ function requirePartStream () {
 	if (hasRequiredPartStream) return PartStream_1;
 	hasRequiredPartStream = 1;
 
-	const inherits = require$$1$5.inherits;
+	const inherits = require$$1$6.inherits;
 	const ReadableStream = require$$0$d.Readable;
 
 	function PartStream (opts) {
@@ -2062,7 +2063,7 @@ function requireHeaderParser () {
 	hasRequiredHeaderParser = 1;
 
 	const EventEmitter = require$$0$c.EventEmitter;
-	const inherits = require$$1$5.inherits;
+	const inherits = require$$1$6.inherits;
 	const getLimit = requireGetLimit();
 
 	const StreamSearch = requireSbmh();
@@ -2170,7 +2171,7 @@ function requireDicer () {
 	hasRequiredDicer = 1;
 
 	const WritableStream = require$$0$d.Writable;
-	const inherits = require$$1$5.inherits;
+	const inherits = require$$1$6.inherits;
 
 	const StreamSearch = requireSbmh();
 
@@ -2747,7 +2748,7 @@ function requireMultipart$1 () {
 	//     -- this will require modifications to utils.parseParams
 
 	const { Readable } = require$$0$d;
-	const { inherits } = require$$1$5;
+	const { inherits } = require$$1$6;
 
 	const Dicer = requireDicer();
 
@@ -3313,7 +3314,7 @@ function requireMain () {
 	hasRequiredMain = 1;
 
 	const WritableStream = require$$0$d.Writable;
-	const { inherits } = require$$1$5;
+	const { inherits } = require$$1$6;
 	const Dicer = requireDicer();
 
 	const MultipartParser = requireMultipart$1();
@@ -7824,7 +7825,7 @@ function requireDispatcher () {
 	if (hasRequiredDispatcher) return dispatcher;
 	hasRequiredDispatcher = 1;
 
-	const EventEmitter = require$$1$3;
+	const EventEmitter = require$$1$4;
 
 	class Dispatcher extends EventEmitter {
 	  dispatch () {
@@ -8137,7 +8138,7 @@ function requireConnect () {
 	    let socket;
 	    if (protocol === 'https:') {
 	      if (!tls) {
-	        tls = require$$1$4;
+	        tls = require$$1$5;
 	      }
 	      servername = servername || options.servername || util.getServerName(host) || null;
 
@@ -8559,7 +8560,7 @@ function requireRedirectHandler () {
 	const { kBodyUsed } = requireSymbols$4();
 	const assert = require$$0$9;
 	const { InvalidArgumentError } = requireErrors$3();
-	const EE = require$$1$3;
+	const EE = require$$1$4;
 
 	const redirectableStatusCodes = [300, 301, 302, 303, 307, 308];
 
@@ -14161,7 +14162,7 @@ function requirePendingInterceptorsFormatter () {
 	hasRequiredPendingInterceptorsFormatter = 1;
 
 	const { Transform } = require$$0$b;
-	const { Console } = require$$1$6;
+	const { Console } = require$$1$7;
 
 	/**
 	 * Gets the output of `console.table(…)` as a string.
@@ -16213,7 +16214,7 @@ function requireRequest () {
 	const { URLSerializer } = requireDataURL();
 	const { kHeadersList, kConstruct } = requireSymbols$4();
 	const assert = require$$0$9;
-	const { getMaxListeners, setMaxListeners, getEventListeners, defaultMaxListeners } = require$$1$3;
+	const { getMaxListeners, setMaxListeners, getEventListeners, defaultMaxListeners } = require$$1$4;
 
 	let TransformStream = globalThis.TransformStream;
 
@@ -17189,7 +17190,7 @@ function requireFetch () {
 	  DOMException
 	} = requireConstants$b();
 	const { kHeadersList } = requireSymbols$4();
-	const EE = require$$1$3;
+	const EE = require$$1$4;
 	const { Readable, pipeline } = require$$0$b;
 	const { addAbortListener, isErrored, isReadable, nodeMajor, nodeMinor } = requireUtil$e();
 	const { dataURLProcessor, serializeAMimeType } = requireDataURL();
@@ -24441,7 +24442,7 @@ function requireLib$3 () {
 	Object.defineProperty(lib$3, "__esModule", { value: true });
 	lib$3.HttpClient = lib$3.isHttps = lib$3.HttpClientResponse = lib$3.HttpClientError = lib$3.getProxyUrl = lib$3.MediaTypes = lib$3.Headers = lib$3.HttpCodes = void 0;
 	const http = __importStar(require$$2$4);
-	const https = __importStar(require$$1$2);
+	const https = __importStar(require$$1$3);
 	const pm = __importStar(requireProxy());
 	const tunnel = __importStar(requireTunnel());
 	const undici_1 = requireUndici();
@@ -25559,7 +25560,7 @@ function requirePathUtils () {
 	};
 	Object.defineProperty(pathUtils, "__esModule", { value: true });
 	pathUtils.toPlatformPath = pathUtils.toWin32Path = pathUtils.toPosixPath = void 0;
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	/**
 	 * toPosixPath converts the given path to the posix form. On Windows, \\ will be
 	 * replaced with /.
@@ -25646,7 +25647,7 @@ function requireIoUtil () {
 		Object.defineProperty(exports$1, "__esModule", { value: true });
 		exports$1.getCmdPath = exports$1.tryGetExecutablePath = exports$1.isRooted = exports$1.isDirectory = exports$1.exists = exports$1.READONLY = exports$1.UV_FS_O_EXLOCK = exports$1.IS_WINDOWS = exports$1.unlink = exports$1.symlink = exports$1.stat = exports$1.rmdir = exports$1.rm = exports$1.rename = exports$1.readlink = exports$1.readdir = exports$1.open = exports$1.mkdir = exports$1.lstat = exports$1.copyFile = exports$1.chmod = void 0;
 		const fs = __importStar(require$$0$6);
-		const path = __importStar(require$$1$7);
+		const path = __importStar(require$$1$8);
 		_a = fs.promises
 		// export const {open} = 'fs'
 		, exports$1.chmod = _a.chmod, exports$1.copyFile = _a.copyFile, exports$1.lstat = _a.lstat, exports$1.mkdir = _a.mkdir, exports$1.open = _a.open, exports$1.readdir = _a.readdir, exports$1.readlink = _a.readlink, exports$1.rename = _a.rename, exports$1.rm = _a.rm, exports$1.rmdir = _a.rmdir, exports$1.stat = _a.stat, exports$1.symlink = _a.symlink, exports$1.unlink = _a.unlink;
@@ -25836,7 +25837,7 @@ function requireIo () {
 	Object.defineProperty(io, "__esModule", { value: true });
 	io.findInPath = io.which = io.mkdirP = io.rmRF = io.mv = io.cp = void 0;
 	const assert_1 = require$$0$9;
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	const ioUtil = __importStar(requireIoUtil());
 	/**
 	 * Copies a file or folder.
@@ -26142,9 +26143,9 @@ function requireToolrunner () {
 	Object.defineProperty(toolrunner, "__esModule", { value: true });
 	toolrunner.argStringToArray = toolrunner.ToolRunner = void 0;
 	const os = __importStar(require$$0$4);
-	const events = __importStar(require$$1$3);
+	const events = __importStar(require$$1$4);
 	const child = __importStar(require$$2$6);
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	const io = __importStar(requireIo());
 	const ioUtil = __importStar(requireIoUtil());
 	const timers_1 = require$$6$2;
@@ -26988,7 +26989,7 @@ function requireCore$1 () {
 		const file_command_1 = requireFileCommand();
 		const utils_1 = requireUtils$a();
 		const os = __importStar(require$$0$4);
-		const path = __importStar(require$$1$7);
+		const path = __importStar(require$$1$8);
 		const oidc_utils_1 = requireOidcUtils();
 		/**
 		 * The code to exit an action
@@ -27413,7 +27414,7 @@ function requireInternalPathHelper () {
 	};
 	Object.defineProperty(internalPathHelper, "__esModule", { value: true });
 	internalPathHelper.safeTrimTrailingSeparator = internalPathHelper.normalizeSeparators = internalPathHelper.hasRoot = internalPathHelper.hasAbsoluteRoot = internalPathHelper.ensureAbsoluteRoot = internalPathHelper.dirname = void 0;
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	const assert_1 = __importDefault(require$$0$9);
 	const IS_WINDOWS = process.platform === 'win32';
 	/**
@@ -29009,7 +29010,7 @@ function requireInternalPath () {
 	};
 	Object.defineProperty(internalPath, "__esModule", { value: true });
 	internalPath.Path = void 0;
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	const pathHelper = __importStar(requireInternalPathHelper());
 	const assert_1 = __importDefault(require$$0$9);
 	const IS_WINDOWS = process.platform === 'win32';
@@ -29134,7 +29135,7 @@ function requireInternalPattern () {
 	Object.defineProperty(internalPattern, "__esModule", { value: true });
 	internalPattern.Pattern = void 0;
 	const os = __importStar(require$$0$4);
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	const pathHelper = __importStar(requireInternalPathHelper());
 	const assert_1 = __importDefault(require$$0$9);
 	const minimatch_1 = requireMinimatch$1();
@@ -29447,7 +29448,7 @@ function requireInternalGlobber () {
 	const core = __importStar(requireCore$1());
 	const fs = __importStar(require$$0$6);
 	const globOptionsHelper = __importStar(requireInternalGlobOptionsHelper());
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	const patternHelper = __importStar(requireInternalPatternHelper());
 	const internal_match_kind_1 = requireInternalMatchKind();
 	const internal_pattern_1 = requireInternalPattern();
@@ -29691,7 +29692,7 @@ function requireInternalHashFiles () {
 	const fs = __importStar(require$$0$6);
 	const stream = __importStar(require$$0$b);
 	const util = __importStar(require$$0$7);
-	const path = __importStar(require$$1$7);
+	const path = __importStar(require$$1$8);
 	function hashFiles(globber, currentWorkspace, verbose = false) {
 	    var _a, e_1, _b, _c;
 	    var _d;
@@ -29869,6 +29870,21 @@ function findCoverageFile(diffPath, coverageMap, resolvedPaths) {
     return null;
 }
 const PatchAnalyzer = {
+    unavailable(reason) {
+        coreExports.warning(`Patch coverage unavailable: ${reason}`);
+        return {
+            status: "unavailable",
+            reason,
+            coveredLines: 0,
+            missedLines: 0,
+            totalLines: 0,
+            percentage: 0,
+            fileBreakdown: [],
+            changedFiles: [],
+            matchedFiles: [],
+            unmatchedFiles: [],
+        };
+    },
     /**
      * Calculate patch coverage by intersecting coverage results with git diff
      */
@@ -29876,6 +29892,7 @@ const PatchAnalyzer = {
         const diffFiles = parseDiff(diffContent);
         const fileBreakdown = [];
         const changedFiles = new Set();
+        const matchedFiles = new Set();
         const unmatchedFiles = [];
         let totalCovered = 0;
         let totalMissed = 0;
@@ -29895,6 +29912,7 @@ const PatchAnalyzer = {
                 unmatchedFiles.push(diffFile.to);
                 continue;
             }
+            matchedFiles.add(diffFile.to);
             const coveredLines = [];
             const missedLines = [];
             const partialLines = [];
@@ -29946,13 +29964,20 @@ const PatchAnalyzer = {
             }
         }
         const totalLines = totalCovered + totalMissed;
-        const percentage = totalLines === 0 ? 100 : (totalCovered / totalLines) * 100;
+        const status = matchedFiles.size === 0
+            ? "unavailable"
+            : unmatchedFiles.length > 0
+                ? "incomplete"
+                : "complete";
+        const percentage = status === "unavailable" || totalLines === 0
+            ? 0
+            : (totalCovered / totalLines) * 100;
         // Warn when no changed files could be matched to coverage data
-        if (unmatchedFiles.length > 0 && totalLines === 0) {
+        if (status === "unavailable" && unmatchedFiles.length > 0) {
             const sampleCoveragePaths = coverageResults.files
                 .slice(0, 3)
                 .map((f) => f.path);
-            coreExports.warning(`Patch coverage defaulted to 100% because no changed files matched coverage data.\n` +
+            coreExports.warning(`Patch coverage unavailable because no changed files matched coverage data.\n` +
                 `  Unmatched diff files: ${unmatchedFiles.join(", ")}\n` +
                 `  Sample coverage paths: ${sampleCoveragePaths.join(", ")}\n` +
                 `  This usually indicates a path format mismatch between your coverage tool and the repository.`);
@@ -29961,16 +29986,25 @@ const PatchAnalyzer = {
             coreExports.info(`  Some changed files had no coverage data: ${unmatchedFiles.join(", ")}`);
         }
         coreExports.info(`Patch Coverage Analysis:`);
+        coreExports.info(`  Status: ${status}`);
+        coreExports.info(`  Changed Files: ${changedFiles.size}`);
+        coreExports.info(`  Matched Files: ${matchedFiles.size}`);
+        coreExports.info(`  Unmatched Files: ${unmatchedFiles.length}`);
         coreExports.info(`  Covered Lines: ${totalCovered}`);
         coreExports.info(`  Missed Lines: ${totalMissed}`);
-        coreExports.info(`  Percentage: ${percentage.toFixed(2)}%`);
+        coreExports.info(`  Percentage: ${status === "unavailable" ? "N/A" : `${percentage.toFixed(2)}%`}`);
         return {
+            status,
+            reason: status === "unavailable"
+                ? "no changed files matched coverage data"
+                : undefined,
             coveredLines: totalCovered,
             missedLines: totalMissed,
             totalLines,
             percentage,
             fileBreakdown,
             changedFiles: [...changedFiles],
+            matchedFiles: [...matchedFiles],
             unmatchedFiles,
         };
     },
@@ -30036,12 +30070,26 @@ const ThresholdChecker = {
         if (!patchCoverage) {
             return {
                 status: "success",
-                description: "Patch coverage: N/A (not in PR context)",
+                description: "Patch coverage unavailable: not in PR context",
+                informational,
+            };
+        }
+        if (patchCoverage.status === "unavailable") {
+            return {
+                status: "success",
+                description: `Patch coverage unavailable: ${patchCoverage.reason ?? "unable to calculate patch coverage"}`,
                 informational,
             };
         }
         // Default target to 80% if set to "auto"
         const target = typeof config.target === "number" ? config.target : 80;
+        if (patchCoverage.status === "incomplete") {
+            return {
+                status: "success",
+                description: `${patchCoverage.percentage.toFixed(2)}% (incomplete: ${patchCoverage.matchedFiles.length} matched files, ${patchCoverage.unmatchedFiles.length} unmatched files; target ${target}%)`,
+                informational,
+            };
+        }
         const isSuccess = patchCoverage.percentage >= target;
         return {
             status: isSuccess ? "success" : "failure",
@@ -33094,21 +33142,23 @@ class ReportFormatter {
      * Add coverage section to the report (Codecov-style format with icons)
      */
     addCoverageSection(lines, results, options) {
-        // Calculate metrics
-        const totalMissing = results.totalMisses || 0;
-        // Use explicit patch coverage if available, otherwise fallback to lineRate (legacy/project)
-        const patchRate = results.patchCoverageRate !== undefined
-            ? results.patchCoverageRate.toFixed(2)
-            : results.lineRate.toFixed(2);
         const patchTarget = options.patchTarget ?? 80;
-        // Line 1: Patch coverage (emoji based on patch rate, not project misses)
-        const patchEmoji = parseFloat(patchRate) >= patchTarget ? ":white_check_mark:" : ":x:";
-        // Build message with clear separation of patch coverage and project misses
-        let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**.`;
-        if (totalMissing > 0) {
-            patchMessage += ` Project has **${totalMissing}** uncovered lines.`;
-        }
-        lines.push(patchMessage);
+        const patchCoverage = options.patchCoverage ??
+            (results.patchCoverageRate !== undefined
+                ? {
+                    status: "complete",
+                    coveredLines: 0,
+                    missedLines: 0,
+                    totalLines: 0,
+                    percentage: results.patchCoverageRate,
+                    fileBreakdown: options.patchFileBreakdown ?? [],
+                    changedFiles: options.changedFiles ?? [],
+                    matchedFiles: options.changedFiles ?? [],
+                    unmatchedFiles: [],
+                }
+                : undefined);
+        const patchBreakdown = options.patchFileBreakdown;
+        lines.push(this.formatPatchSummaryLine(patchCoverage, patchBreakdown, patchTarget));
         // Line 2: Project coverage with comparison info
         if (results.comparison) {
             const baseRef = results.comparison.baseCommit
@@ -33126,7 +33176,6 @@ class ReportFormatter {
         }
         lines.push("");
         const filesMode = options.filesMode || "changed";
-        const patchBreakdown = options.patchFileBreakdown;
         // When patch file breakdown is available (PR context), use it to show
         // only the uncovered lines within the diff rather than all project-wide
         // uncovered lines. This matches the behavior of Codecov's official comments.
@@ -33145,18 +33194,7 @@ class ReportFormatter {
                 for (const file of patchFilesWithMissing) {
                     const filePath = this.normalizeFilePath(file.path);
                     const fileCell = this.formatFileCell(filePath, options.githubContext);
-                    const missingCount = file.missedLines.length;
-                    const partialCount = file.partialLines.length;
-                    let linesText = "";
-                    if (missingCount > 0 && partialCount > 0) {
-                        linesText = `:warning: ${missingCount} Missing and ${partialCount} partials`;
-                    }
-                    else if (missingCount > 0) {
-                        linesText = `:warning: ${missingCount} Missing`;
-                    }
-                    else if (partialCount > 0) {
-                        linesText = `:warning: ${partialCount} partials`;
-                    }
+                    const linesText = this.formatPatchLineDetails(file.missedLines, file.partialLines);
                     lines.push(`| ${fileCell} | ${file.percentage.toFixed(2)}% | ${linesText} |`);
                 }
                 lines.push("");
@@ -33324,6 +33362,64 @@ class ReportFormatter {
         lines.push("");
         lines.push("</details>");
         lines.push("");
+    }
+    countPatchMissedLines(patchBreakdown) {
+        if (!patchBreakdown)
+            return 0;
+        return patchBreakdown.reduce((total, file) => total + file.missedLines.length, 0);
+    }
+    formatPatchSummaryLine(patchCoverage, patchBreakdown, patchTarget) {
+        if (!patchCoverage) {
+            return ":grey_question: Patch coverage unavailable: not in pull request context.";
+        }
+        if (patchCoverage.status === "unavailable") {
+            return `:grey_question: Patch coverage unavailable: ${patchCoverage.reason ?? "unable to calculate patch coverage"}.`;
+        }
+        const patchRate = patchCoverage.percentage.toFixed(2);
+        const patchMissedLines = this.countPatchMissedLines(patchBreakdown);
+        const patchEmoji = patchCoverage.status === "complete" &&
+            patchCoverage.percentage < patchTarget
+            ? ":x:"
+            : ":white_check_mark:";
+        let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**`;
+        if (patchCoverage.status === "incomplete") {
+            patchMessage += `, but incomplete (${patchCoverage.matchedFiles.length} matched files, ${patchCoverage.unmatchedFiles.length} unmatched files)`;
+        }
+        patchMessage += ".";
+        if (patchMissedLines > 0) {
+            patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
+        }
+        return patchMessage;
+    }
+    formatPatchLineDetails(missedLines, partialLines) {
+        const details = [];
+        if (missedLines.length > 0) {
+            details.push(`Missing: ${this.formatLineRanges(missedLines)}`);
+        }
+        if (partialLines.length > 0) {
+            details.push(`Partial: ${this.formatLineRanges(partialLines)}`);
+        }
+        return `:warning: ${details.join("<br>")}`;
+    }
+    formatLineRanges(lines) {
+        const uniqueLines = [...new Set(lines)].sort((a, b) => a - b);
+        const ranges = [];
+        let start = uniqueLines[0];
+        let previous = uniqueLines[0];
+        for (let i = 1; i <= uniqueLines.length; i++) {
+            const current = uniqueLines[i];
+            if (current === previous + 1) {
+                previous = current;
+                continue;
+            }
+            ranges.push(start === previous ? `L${start}` : `L${start}-L${previous}`);
+            start = current;
+            previous = current;
+        }
+        return ranges.join(", ");
+    }
+    pluralize(word, count) {
+        return count === 1 ? word : `${word}s`;
     }
     /**
      * Format a file path as a markdown table cell, optionally linked to the
@@ -42262,7 +42358,7 @@ function requireParser () {
 
 		  sax = requireSax();
 
-		  events = require$$1$3;
+		  events = require$$1$4;
 
 		  bom = requireBom();
 
@@ -48461,27 +48557,6 @@ class GitHubClient {
             description,
             target_url: targetUrl,
         });
-    }
-    /**
-     * Get the PR diff content
-     */
-    async getPrDiff() {
-        const prNumber = this.getPullRequestNumber();
-        if (!prNumber) {
-            throw new Error("Cannot get PR diff: Not a pull request");
-        }
-        const { owner, repo } = this.context.repo;
-        const { data } = await this.octokit.rest.pulls.get({
-            owner,
-            repo,
-            pull_number: prNumber,
-            mediaType: {
-                format: "diff",
-            },
-        });
-        // The type definition for pulls.get doesn't explicitly include string when mediaType is diff,
-        // but the API returns the raw diff string.
-        return data;
     }
 }
 
@@ -55416,7 +55491,7 @@ function requireUploadZipSpecification () {
 	uploadZipSpecification.getUploadZipSpecification = uploadZipSpecification.validateRootDirectory = void 0;
 	const fs = __importStar(require$$0$6);
 	const core_1 = requireCore$1();
-	const path_1 = require$$1$7;
+	const path_1 = require$$1$8;
 	const path_and_artifact_name_validation_1 = requirePathAndArtifactNameValidation();
 	/**
 	 * Checks if a root directory exists and is valid
@@ -56021,8 +56096,8 @@ function requireLog$5 () {
 	Object.defineProperty(log$6, "__esModule", { value: true });
 	log$6.log = log;
 	const tslib_1 = require$$0$1;
-	const node_os_1 = os__default;
-	const node_util_1 = tslib_1.__importDefault(require$$1$5);
+	const node_os_1 = require$$1__default;
+	const node_util_1 = tslib_1.__importDefault(require$$1$6);
 	const node_process_1 = tslib_1.__importDefault(require$$2$7);
 	function log(message, ...args) {
 	    node_process_1.default.stderr.write(`${node_util_1.default.format(message, ...args)}${node_os_1.EOL}`);
@@ -56925,7 +57000,7 @@ function requireInspect$1 () {
 	// Licensed under the MIT License.
 	Object.defineProperty(inspect$1, "__esModule", { value: true });
 	inspect$1.custom = void 0;
-	const node_util_1 = require$$1$5;
+	const node_util_1 = require$$1$6;
 	inspect$1.custom = node_util_1.inspect.custom;
 	
 	return inspect$1;
@@ -57266,7 +57341,7 @@ function requireNodeHttpClient () {
 	nodeHttpClient.getBodyLength = getBodyLength;
 	nodeHttpClient.createNodeHttpClient = createNodeHttpClient;
 	const tslib_1 = require$$0$1;
-	const node_http_1 = tslib_1.__importDefault(require$$1$8);
+	const node_http_1 = tslib_1.__importDefault(require$$1$9);
 	const node_https_1 = tslib_1.__importDefault(require$$2$8);
 	const node_zlib_1 = tslib_1.__importDefault(require$$3$2);
 	const node_stream_1 = require$$0$d;
@@ -57772,7 +57847,7 @@ function requireUserAgentPlatform$1 () {
 	userAgentPlatform$1.getHeaderName = getHeaderName;
 	userAgentPlatform$1.setPlatformSpecificData = setPlatformSpecificData;
 	const tslib_1 = require$$0$1;
-	const node_os_1 = tslib_1.__importDefault(os__default);
+	const node_os_1 = tslib_1.__importDefault(require$$1__default);
 	const node_process_1 = tslib_1.__importDefault(require$$2$7);
 	/**
 	 * @internal
@@ -59345,7 +59420,7 @@ function requireSupportsColor () {
 	if (hasRequiredSupportsColor) return supportsColor_1;
 	hasRequiredSupportsColor = 1;
 	const os = require$$0$4;
-	const tty = require$$1$9;
+	const tty = require$$1$a;
 	const hasFlag = requireHasFlag();
 
 	const {env} = process;
@@ -59491,7 +59566,7 @@ function requireNode$1 () {
 	if (hasRequiredNode$1) return node$1.exports;
 	hasRequiredNode$1 = 1;
 	(function (module, exports$1) {
-		const tty = require$$1$9;
+		const tty = require$$1$a;
 		const util = require$$0$7;
 
 		/**
@@ -59807,7 +59882,7 @@ function requireHelpers () {
 	Object.defineProperty(helpers, "__esModule", { value: true });
 	helpers.req = helpers.json = helpers.toBuffer = void 0;
 	const http = __importStar(require$$2$4);
-	const https = __importStar(require$$1$2);
+	const https = __importStar(require$$1$3);
 	async function toBuffer(stream) {
 	    let length = 0;
 	    const chunks = [];
@@ -59885,7 +59960,7 @@ function requireDist$3 () {
 		exports$1.Agent = void 0;
 		const net = __importStar(require$$0$a);
 		const http = __importStar(require$$2$4);
-		const https_1 = require$$1$2;
+		const https_1 = require$$1$3;
 		__exportStar(requireHelpers(), exports$1);
 		const INTERNAL = Symbol('AgentBaseInternalState');
 		class Agent extends http.Agent {
@@ -60180,7 +60255,7 @@ function requireDist$2 () {
 	Object.defineProperty(dist$3, "__esModule", { value: true });
 	dist$3.HttpsProxyAgent = void 0;
 	const net = __importStar(require$$0$a);
-	const tls = __importStar(require$$1$4);
+	const tls = __importStar(require$$1$5);
 	const assert_1 = __importDefault(require$$0$9);
 	const debug_1 = __importDefault(requireSrc$1());
 	const agent_base_1 = requireDist$3();
@@ -60369,9 +60444,9 @@ function requireDist$1 () {
 	Object.defineProperty(dist$1, "__esModule", { value: true });
 	dist$1.HttpProxyAgent = void 0;
 	const net = __importStar(require$$0$a);
-	const tls = __importStar(require$$1$4);
+	const tls = __importStar(require$$1$5);
 	const debug_1 = __importDefault(requireSrc$1());
-	const events_1 = require$$1$3;
+	const events_1 = require$$1$4;
 	const agent_base_1 = requireDist$3();
 	const url_1 = Url;
 	const debug = (0, debug_1.default)('http-proxy-agent');
@@ -62523,7 +62598,7 @@ function requireUserAgentPlatform () {
 	userAgentPlatform.getHeaderName = getHeaderName;
 	userAgentPlatform.setPlatformSpecificData = setPlatformSpecificData;
 	const tslib_1 = require$$0$1;
-	const node_os_1 = tslib_1.__importDefault(os__default);
+	const node_os_1 = tslib_1.__importDefault(require$$1__default);
 	const node_process_1 = tslib_1.__importDefault(require$$2$7);
 	/**
 	 * @internal
@@ -70668,7 +70743,7 @@ function requireBufferScheduler () {
 	// Licensed under the MIT License.
 	Object.defineProperty(BufferScheduler, "__esModule", { value: true });
 	BufferScheduler.BufferScheduler = void 0;
-	const events_1 = require$$1$3;
+	const events_1 = require$$1$4;
 	const PooledBuffer_js_1 = requirePooledBuffer();
 	/**
 	 * This class accepts a Node.js Readable stream as input, and keeps reading data
@@ -93009,7 +93084,7 @@ function requireBatch () {
 	Batch.Batch = void 0;
 	// In browser, during webpack or browserify bundling, this module will be replaced by 'events'
 	// https://github.com/Gozala/events
-	const events_1 = require$$1$3;
+	const events_1 = require$$1$4;
 	/**
 	 * States for Batch.
 	 */
@@ -93156,7 +93231,7 @@ function requireUtils$5 () {
 	utils$5.readStreamToLocalFile = readStreamToLocalFile;
 	const tslib_1 = require$$0$1;
 	const node_fs_1 = tslib_1.__importDefault(fs__default);
-	const node_util_1 = tslib_1.__importDefault(require$$1$5);
+	const node_util_1 = tslib_1.__importDefault(require$$1$6);
 	const constants_js_1 = requireConstants$5();
 	/**
 	 * Reads a readable stream into buffer. Fill the buffer from offset to end.
@@ -100823,9 +100898,9 @@ function requireReaddirGlob () {
 	readdirGlob_1 = readdirGlob;
 
 	const fs = require$$0$6;
-	const { EventEmitter } = require$$1$3;
+	const { EventEmitter } = require$$1$4;
 	const { Minimatch } = requireMinimatch();
-	const { resolve } = require$$1$7;
+	const { resolve } = require$$1$8;
 
 	function readdir(dir, strict) {
 	  return new Promise((resolve, reject) => {
@@ -109743,7 +109818,7 @@ function require_stream_readable () {
 	Readable.ReadableState = ReadableState;
 
 	/*<replacement>*/
-	require$$1$3.EventEmitter;
+	require$$1$4.EventEmitter;
 
 	var EElistenerCount = function (emitter, type) {
 	  return emitter.listeners(type).length;
@@ -114330,7 +114405,7 @@ function requireUtil$3 () {
 		    return fn
 		  },
 		  addAbortListener:
-		    require$$1$3.addAbortListener ||
+		    require$$1$4.addAbortListener ||
 		    function addAbortListener(signal, listener) {
 		      if (signal === undefined) {
 		        throw new ERR_INVALID_ARG_TYPE('signal', 'AbortSignal', signal)
@@ -115876,7 +115951,7 @@ function requireLegacy () {
 	hasRequiredLegacy = 1;
 
 	const { ArrayIsArray, ObjectSetPrototypeOf } = requirePrimordials();
-	const { EventEmitter: EE } = require$$1$3;
+	const { EventEmitter: EE } = require$$1$4;
 	function Stream(opts) {
 	  EE.call(this, opts);
 	}
@@ -116736,7 +116811,7 @@ function requireReadable () {
 	} = requirePrimordials();
 	readable = Readable;
 	Readable.ReadableState = ReadableState;
-	const { EventEmitter: EE } = require$$1$3;
+	const { EventEmitter: EE } = require$$1$4;
 	const { Stream, prependListener } = requireLegacy();
 	const { Buffer } = require$$0$8;
 	const { addAbortSignal } = requireAddAbortSignal();
@@ -118010,7 +118085,7 @@ function requireWritable () {
 	} = requirePrimordials();
 	writable = Writable;
 	Writable.WritableState = WritableState;
-	const { EventEmitter: EE } = require$$1$3;
+	const { EventEmitter: EE } = require$$1$4;
 	const Stream = requireLegacy().Stream;
 	const { Buffer } = require$$0$8;
 	const destroyImpl = requireDestroy();
@@ -130409,7 +130484,7 @@ function requireFile () {
 	if (hasRequiredFile) return file.exports;
 	hasRequiredFile = 1;
 	var fs = requireGracefulFs();
-	var path = require$$1$7;
+	var path = require$$1$8;
 
 	var flatten = requireFlatten();
 	var difference = requireDifference();
@@ -130626,7 +130701,7 @@ function requireArchiverUtils () {
 	if (hasRequiredArchiverUtils) return archiverUtils.exports;
 	hasRequiredArchiverUtils = 1;
 	var fs = requireGracefulFs();
-	var path = require$$1$7;
+	var path = require$$1$8;
 	var isStream = requireIsStream();
 	var lazystream = requireLazystream();
 	var normalizePath = requireNormalizePath();
@@ -130845,7 +130920,7 @@ function requireCore () {
 	var fs = require$$0$6;
 	var glob = requireReaddirGlob();
 	var async = require$$2$1;
-	var path = require$$1$7;
+	var path = require$$1$8;
 	var util = requireArchiverUtils();
 
 	var inherits = require$$0$7.inherits;
@@ -133843,7 +133918,7 @@ var hasRequired_default;
 function require_default () {
 	if (hasRequired_default) return _default;
 	hasRequired_default = 1;
-	_default = require$$1$3;
+	_default = require$$1$4;
 	return _default;
 }
 
@@ -137374,7 +137449,7 @@ function requireZip () {
 		Object.defineProperty(exports$1, "__esModule", { value: true });
 		exports$1.createZipUploadStream = exports$1.ZipUploadStream = exports$1.DEFAULT_COMPRESSION_LEVEL = void 0;
 		const stream = __importStar(require$$0$b);
-		const promises_1 = require$$1$a;
+		const promises_1 = require$$1$b;
 		const archiver = __importStar(requireArchiver());
 		const core = __importStar(requireCore$1());
 		const config_1 = requireConfig();
@@ -219364,7 +219439,7 @@ function fetch(url, opts) {
 		const request = new Request(url, opts);
 		const options = getNodeRequestOptions(request);
 
-		const send = (options.protocol === 'https:' ? require$$1$2 : require$$2$4).request;
+		const send = (options.protocol === 'https:' ? require$$1$3 : require$$2$4).request;
 		const signal = request.signal;
 
 		let response = null;
@@ -222743,7 +222818,7 @@ function requireChainsaw () {
 	if (hasRequiredChainsaw) return chainsaw;
 	hasRequiredChainsaw = 1;
 	var Traverse = requireTraverse();
-	var EventEmitter = require$$1$3.EventEmitter;
+	var EventEmitter = require$$1$4.EventEmitter;
 
 	chainsaw = Chainsaw;
 	function Chainsaw (builder) {
@@ -223207,7 +223282,7 @@ function requireBinary () {
 	hasRequiredBinary = 1;
 	(function (module, exports$1) {
 		var Chainsaw = requireChainsaw();
-		var EventEmitter = require$$1$3.EventEmitter;
+		var EventEmitter = require$$1$4.EventEmitter;
 		var Buffers = requireBuffers();
 		var Vars = requireVars();
 		var Stream = require$$0$b.Stream;
@@ -224553,7 +224628,7 @@ var hasRequiredMkdirp;
 function requireMkdirp () {
 	if (hasRequiredMkdirp) return mkdirp;
 	hasRequiredMkdirp = 1;
-	var path = require$$1$7;
+	var path = require$$1$8;
 	var fs = require$$0$6;
 	var _0777 = parseInt('0777', 8);
 
@@ -224665,7 +224740,7 @@ function requireExtract () {
 	if (hasRequiredExtract) return extract;
 	hasRequiredExtract = 1;
 	var fs = require$$0$6;
-	var path = require$$1$7;
+	var path = require$$1$8;
 	var util = require$$0$7;
 	var mkdirp = requireMkdirp();
 	var Transform = require$$0$b.Transform;
@@ -224817,7 +224892,7 @@ function requireDownloadArtifact () {
 	};
 	Object.defineProperty(downloadArtifact, "__esModule", { value: true });
 	downloadArtifact.downloadArtifactInternal = downloadArtifact.downloadArtifactPublic = downloadArtifact.streamExtractExternal = void 0;
-	const promises_1 = __importDefault(require$$1$a);
+	const promises_1 = __importDefault(require$$1$b);
 	const crypto = __importStar(require$$0$5);
 	const stream = __importStar(require$$0$b);
 	const github = __importStar(requireGithub());
@@ -227528,7 +227603,7 @@ function requireUtils () {
 	if (hasRequiredUtils) return utils;
 	hasRequiredUtils = 1;
 	const fsystem = require$$0$6;
-	const pth = require$$1$7;
+	const pth = require$$1$8;
 	const Constants = requireConstants();
 	const Errors = requireErrors();
 	const isWin = typeof process === "object" && "win32" === process.platform;
@@ -227868,7 +227943,7 @@ var hasRequiredFattr;
 function requireFattr () {
 	if (hasRequiredFattr) return fattr;
 	hasRequiredFattr = 1;
-	const pth = require$$1$7;
+	const pth = require$$1$8;
 
 	fattr = function (/*String*/ path, /*Utils object*/ { fs }) {
 	    var _path = path || "",
@@ -229663,7 +229738,7 @@ function requireAdmZip () {
 	if (hasRequiredAdmZip) return admZip;
 	hasRequiredAdmZip = 1;
 	const Utils = requireUtil();
-	const pth = require$$1$7;
+	const pth = require$$1$8;
 	const ZipEntry = requireZipEntry();
 	const ZipFile = requireZipFile();
 
@@ -230714,7 +230789,7 @@ class ArtifactManager {
             const artifactName = this.getArtifactName(branchName, "test", undefined, name);
             coreExports.info(`📤 Uploading test results as artifact: ${artifactName}`);
             // Create a temporary directory for the artifact
-            const tmpDir = fs.mkdtempSync(path$1.join(os.tmpdir(), "codecov-test-"));
+            const tmpDir = fs.mkdtempSync(path$1.join(require$$1$2.tmpdir(), "codecov-test-"));
             const resultsFile = path$1.join(tmpDir, "test-results.json");
             // Write results to file (without the comparison field to avoid circular data)
             const { comparison: _comparison, ...resultsToSave } = results;
@@ -230747,7 +230822,7 @@ class ArtifactManager {
                 coreExports.info(`   Flags: ${flags.join(", ")}`);
             }
             // Create a temporary directory for the artifact
-            const tmpDir = fs.mkdtempSync(path$1.join(os.tmpdir(), "codecov-coverage-"));
+            const tmpDir = fs.mkdtempSync(path$1.join(require$$1$2.tmpdir(), "codecov-coverage-"));
             const resultsFile = path$1.join(tmpDir, "coverage-results.json");
             // Write results to file (without the comparison field to avoid circular data)
             // Include flags and name metadata in the saved results
@@ -230766,91 +230841,141 @@ class ArtifactManager {
             // Don't throw - artifact upload failure shouldn't fail the action
         }
     }
-    /**
-     * Fetch valid completed workflow runs, optionally trying a specific commit
-     * SHA first and falling back to the base branch.
-     */
-    async fetchValidWorkflowRuns(baseBranch, baseSha) {
-        // If a specific SHA was requested, try it first
-        if (baseSha) {
-            coreExports.info(`   Looking for specific commit SHA: ${baseSha}`);
-            const shaResponse = await this.octokit.rest.actions.listWorkflowRunsForRepo({
-                owner: this.owner,
-                repo: this.repo,
-                head_sha: baseSha,
-                status: "completed",
-                per_page: 10,
-            });
-            const shaRuns = shaResponse.data.workflow_runs.filter((r) => r.conclusion && VALID_RUN_CONCLUSIONS.has(r.conclusion));
-            if (shaRuns.length > 0) {
-                return shaRuns;
-            }
-            coreExports.info(`ℹ️ No completed workflow runs found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`);
-        }
-        // Fall back to branch-based lookup
-        const branchResponse = await this.octokit.rest.actions.listWorkflowRunsForRepo({
+    filterValidRuns(runs) {
+        return runs.filter((r) => r.conclusion && VALID_RUN_CONCLUSIONS.has(r.conclusion));
+    }
+    async fetchWorkflowRunsForSha(baseSha) {
+        coreExports.info(`   Looking for specific commit SHA: ${baseSha}`);
+        const response = await this.octokit.rest.actions.listWorkflowRunsForRepo({
+            owner: this.owner,
+            repo: this.repo,
+            head_sha: baseSha,
+            status: "completed",
+            per_page: 10,
+        });
+        return this.filterValidRuns(response.data.workflow_runs);
+    }
+    async fetchWorkflowRunsForBranch(baseBranch) {
+        const response = await this.octokit.rest.actions.listWorkflowRunsForRepo({
             owner: this.owner,
             repo: this.repo,
             branch: baseBranch,
             status: "completed",
             per_page: 10,
         });
-        return branchResponse.data.workflow_runs.filter((r) => r.conclusion && VALID_RUN_CONCLUSIONS.has(r.conclusion));
+        return this.filterValidRuns(response.data.workflow_runs);
+    }
+    getArtifactNamesToTry(branchName, type, flags, name) {
+        return [
+            ...new Set([
+                this.getArtifactName(branchName, type, flags, name),
+                this.getArtifactName(branchName, type),
+                this.getLegacyArtifactName(branchName, type, flags, name),
+                this.getLegacyArtifactName(branchName, type),
+            ]),
+        ];
+    }
+    getArtifactNamesForRun(baseBranch, run, type, flags, name) {
+        const branchNames = [
+            baseBranch,
+            ...(run.head_branch && run.head_branch !== baseBranch
+                ? [run.head_branch]
+                : []),
+        ];
+        return [
+            ...new Set(branchNames.flatMap((branchName) => this.getArtifactNamesToTry(branchName, type, flags, name))),
+        ];
+    }
+    findArtifact(artifacts, artifactNamesToTry, type, flags, name) {
+        const exactMatch = artifactNamesToTry
+            .map((artifactName) => artifacts.find((a) => a.name === artifactName && !a.expired))
+            .find(Boolean);
+        if (exactMatch) {
+            return exactMatch;
+        }
+        if (flags?.length || name) {
+            return undefined;
+        }
+        return artifacts.find((a) => !a.expired &&
+            a.name.startsWith(`codecov-${type}-results-`) &&
+            (a.name.endsWith(`-${type}-report`) ||
+                a.name.includes(`-${type}-report-`)));
+    }
+    async findArtifactInRuns(runs, baseBranch, type, flags, name) {
+        for (const run of runs) {
+            const artifactNamesToTry = this.getArtifactNamesForRun(baseBranch, run, type, flags, name);
+            const artifacts = await this.octokit.rest.actions.listWorkflowRunArtifacts({
+                owner: this.owner,
+                repo: this.repo,
+                run_id: run.id,
+            });
+            const artifact = this.findArtifact(artifacts.data.artifacts, artifactNamesToTry, type, flags, name);
+            if (artifact) {
+                return { artifact, run };
+            }
+        }
+        return null;
+    }
+    async downloadArtifactZip(artifact, tmpPrefix) {
+        const download = await this.octokit.rest.actions.downloadArtifact({
+            owner: this.owner,
+            repo: this.repo,
+            artifact_id: artifact.id,
+            archive_format: "zip",
+        });
+        const tmpDir = fs.mkdtempSync(path$1.join(require$$1$2.tmpdir(), tmpPrefix));
+        const zipPath = path$1.join(tmpDir, "artifact.zip");
+        fs.writeFileSync(zipPath, Buffer.from(download.data));
+        return { zipPath, tmpDir };
+    }
+    async downloadAndReadTestArtifact(artifact) {
+        const { zipPath, tmpDir } = await this.downloadArtifactZip(artifact, "codecov-base-test-");
+        const results = this.extractAndReadResults(zipPath, tmpDir);
+        fs.unlinkSync(zipPath);
+        fs.rmSync(tmpDir, { recursive: true });
+        return results;
+    }
+    async downloadAndReadCoverageArtifact(artifact) {
+        const { zipPath, tmpDir } = await this.downloadArtifactZip(artifact, "codecov-base-coverage-");
+        const results = this.extractAndReadCoverageResults(zipPath, tmpDir);
+        fs.unlinkSync(zipPath);
+        fs.rmSync(tmpDir, { recursive: true });
+        return results;
     }
     /**
      * Download test results from a base branch artifact using GitHub API
      */
     async downloadBaseResults(baseBranch, name, baseSha) {
         try {
-            const artifactName = this.getArtifactName(baseBranch, "test", undefined, name);
-            const legacyArtifactName = this.getLegacyArtifactName(baseBranch, "test", undefined, name);
-            const unflaggedArtifactName = this.getArtifactName(baseBranch, "test");
-            const legacyUnflaggedArtifactName = this.getLegacyArtifactName(baseBranch, "test");
             const artifactNamesToTry = [
-                ...new Set([
-                    artifactName,
-                    unflaggedArtifactName,
-                    legacyArtifactName,
-                    legacyUnflaggedArtifactName,
-                ]),
+                ...new Set(this.getArtifactNamesToTry(baseBranch, "test", undefined, name)),
             ];
             coreExports.info(`📥 Attempting to download base test results: ${artifactNamesToTry[0]}`);
-            const validRuns = await this.fetchValidWorkflowRuns(baseBranch, baseSha);
-            if (validRuns.length === 0) {
-                coreExports.info(`ℹ️ No completed workflow runs found for branch '${baseBranch}'`);
-                return null;
-            }
-            // Look through recent runs for the artifact
-            for (const run of validRuns) {
-                const artifacts = await this.octokit.rest.actions.listWorkflowRunArtifacts({
-                    owner: this.owner,
-                    repo: this.repo,
-                    run_id: run.id,
-                });
-                for (const nameToTry of artifactNamesToTry) {
-                    const artifact = artifacts.data.artifacts.find((a) => a.name === nameToTry && !a.expired);
-                    if (artifact) {
-                        coreExports.info(`Found test artifact '${nameToTry}' from run #${run.run_number}`);
-                        // Download the artifact
-                        const download = await this.octokit.rest.actions.downloadArtifact({
-                            owner: this.owner,
-                            repo: this.repo,
-                            artifact_id: artifact.id,
-                            archive_format: "zip",
-                        });
-                        // Create temp directory and save the zip
-                        const tmpDir = fs.mkdtempSync(path$1.join(os.tmpdir(), "codecov-base-test-"));
-                        const zipPath = path$1.join(tmpDir, "artifact.zip");
-                        // The download is a buffer, write it to file
-                        fs.writeFileSync(zipPath, Buffer.from(download.data));
-                        // Extract and read the results
-                        const results = this.extractAndReadResults(zipPath, tmpDir);
-                        // Clean up
-                        fs.unlinkSync(zipPath);
-                        fs.rmSync(tmpDir, { recursive: true });
-                        return results;
-                    }
+            const tryRuns = async (runs) => {
+                const match = await this.findArtifactInRuns(runs, baseBranch, "test", undefined, name);
+                if (!match) {
+                    return null;
                 }
+                coreExports.info(`Found test artifact '${match.artifact.name}' from run #${match.run.run_number}`);
+                return this.downloadAndReadTestArtifact(match.artifact);
+            };
+            if (baseSha) {
+                const shaRuns = await this.fetchWorkflowRunsForSha(baseSha);
+                if (shaRuns.length === 0) {
+                    coreExports.info(`ℹ️ No completed workflow runs found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`);
+                }
+                else {
+                    const result = await tryRuns(shaRuns);
+                    if (result) {
+                        return result;
+                    }
+                    coreExports.info(`ℹ️ No usable test artifact found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`);
+                }
+            }
+            const branchRuns = await this.fetchWorkflowRunsForBranch(baseBranch);
+            const branchResult = await tryRuns(branchRuns);
+            if (branchResult) {
+                return branchResult;
             }
             coreExports.info(`ℹ️ No artifact '${artifactNamesToTry[0]}' found in recent workflow runs`);
             return null;
@@ -230875,59 +231000,38 @@ class ArtifactManager {
             // 2. Unflagged with job ID
             // 3. Flagged/named without job ID (legacy format)
             // 4. Unflagged without job ID (legacy format)
-            const flaggedArtifactName = this.getArtifactName(baseBranch, "coverage", flags, name);
-            const unflaggedArtifactName = this.getArtifactName(baseBranch, "coverage");
-            const legacyFlaggedArtifactName = this.getLegacyArtifactName(baseBranch, "coverage", flags, name);
-            const legacyUnflaggedArtifactName = this.getLegacyArtifactName(baseBranch, "coverage");
             const artifactNamesToTry = [
-                ...new Set([
-                    flaggedArtifactName,
-                    unflaggedArtifactName,
-                    legacyFlaggedArtifactName,
-                    legacyUnflaggedArtifactName,
-                ]),
+                ...new Set(this.getArtifactNamesToTry(baseBranch, "coverage", flags, name)),
             ];
             coreExports.info(`📥 Attempting to download base coverage results: ${artifactNamesToTry[0]}`);
             if (flags && flags.length > 0) {
                 coreExports.info(`   Looking for flags: ${flags.join(", ")}`);
             }
-            const validRuns = await this.fetchValidWorkflowRuns(baseBranch, baseSha);
-            if (validRuns.length === 0) {
-                coreExports.info(`ℹ️ No completed workflow runs found for branch '${baseBranch}'`);
-                return null;
-            }
-            // Look through recent runs for the artifact
-            for (const run of validRuns) {
-                const artifacts = await this.octokit.rest.actions.listWorkflowRunArtifacts({
-                    owner: this.owner,
-                    repo: this.repo,
-                    run_id: run.id,
-                });
-                // Try to find artifact with each name in order of preference
-                for (const artifactName of artifactNamesToTry) {
-                    const artifact = artifacts.data.artifacts.find((a) => a.name === artifactName && !a.expired);
-                    if (artifact) {
-                        coreExports.info(`Found coverage artifact '${artifactName}' from run #${run.run_number}`);
-                        // Download the artifact
-                        const download = await this.octokit.rest.actions.downloadArtifact({
-                            owner: this.owner,
-                            repo: this.repo,
-                            artifact_id: artifact.id,
-                            archive_format: "zip",
-                        });
-                        // Create temp directory and save the zip
-                        const tmpDir = fs.mkdtempSync(path$1.join(os.tmpdir(), "codecov-base-coverage-"));
-                        const zipPath = path$1.join(tmpDir, "artifact.zip");
-                        // The download is a buffer, write it to file
-                        fs.writeFileSync(zipPath, Buffer.from(download.data));
-                        // Extract and read the coverage results
-                        const results = this.extractAndReadCoverageResults(zipPath, tmpDir);
-                        // Clean up
-                        fs.unlinkSync(zipPath);
-                        fs.rmSync(tmpDir, { recursive: true });
-                        return results;
-                    }
+            const tryRuns = async (runs) => {
+                const match = await this.findArtifactInRuns(runs, baseBranch, "coverage", flags, name);
+                if (!match) {
+                    return null;
                 }
+                coreExports.info(`Found coverage artifact '${match.artifact.name}' from run #${match.run.run_number}`);
+                return this.downloadAndReadCoverageArtifact(match.artifact);
+            };
+            if (baseSha) {
+                const shaRuns = await this.fetchWorkflowRunsForSha(baseSha);
+                if (shaRuns.length === 0) {
+                    coreExports.info(`ℹ️ No completed workflow runs found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`);
+                }
+                else {
+                    const result = await tryRuns(shaRuns);
+                    if (result) {
+                        return result;
+                    }
+                    coreExports.info(`ℹ️ No usable coverage artifact found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`);
+                }
+            }
+            const branchRuns = await this.fetchWorkflowRunsForBranch(baseBranch);
+            const branchResult = await tryRuns(branchRuns);
+            if (branchResult) {
+                return branchResult;
             }
             coreExports.info(`ℹ️ No artifact '${artifactNamesToTry[0]}' found in recent workflow runs`);
             return null;
@@ -231443,6 +231547,16 @@ function verboseLog(message, verbose) {
         coreExports.info(`[verbose] ${message}`);
     }
 }
+function getLocalPatchDiff(baseSha) {
+    if (!baseSha) {
+        throw new Error("base-sha input is required for local patch diff");
+    }
+    coreExports.info(`   Using local git diff from ${baseSha} to HEAD`);
+    return execFileSync("git", ["diff", "--unified=0", baseSha, "HEAD"], {
+        encoding: "utf8",
+        maxBuffer: 100 * 1024 * 1024,
+    });
+}
 async function run() {
     try {
         // Get inputs
@@ -231503,16 +231617,23 @@ async function run() {
                 if (githubClient.isPullRequest()) {
                     try {
                         coreExports.info("🔍 Calculating patch coverage...");
-                        const diffContent = await githubClient.getPrDiff();
+                        const diffContent = getLocalPatchDiff(baseSha);
                         patchCoverage = PatchAnalyzer.analyzePatchCoverage(diffContent, aggregatedCoverageResults);
                         // Set patch coverage output
                         coreExports.setOutput("patch-coverage", patchCoverage.percentage.toString());
+                        coreExports.setOutput("patch-coverage-state", patchCoverage.status);
+                        if (patchCoverage.reason) {
+                            coreExports.setOutput("patch-coverage-reason", patchCoverage.reason);
+                        }
                         // Enrich aggregated results with patch coverage for the formatter
                         aggregatedCoverageResults.patchCoverageRate =
                             patchCoverage.percentage;
                     }
                     catch (error) {
-                        coreExports.warning(`Failed to calculate patch coverage: ${error}`);
+                        const message = error instanceof Error ? error.message : String(error);
+                        patchCoverage = PatchAnalyzer.unavailable(message);
+                        coreExports.setOutput("patch-coverage-state", patchCoverage.status);
+                        coreExports.setOutput("patch-coverage-reason", message);
                     }
                 }
                 // Determine project config (inputs override YAML)
@@ -231610,6 +231731,7 @@ async function run() {
                 ? patchCoverage?.changedFiles || []
                 : undefined,
             patchTarget: patchTargetForFormatter,
+            patchCoverage,
             patchFileBreakdown: patchCoverage?.fileBreakdown,
             githubContext,
         };

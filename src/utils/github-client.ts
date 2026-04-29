@@ -62,7 +62,7 @@ export class GitHubClient {
       const existingComment = comments.find(
         (comment) =>
           comment.body?.includes(identifier) ||
-          comment.body?.includes(legacyIdentifier)
+          comment.body?.includes(legacyIdentifier),
       );
 
       const fullCommentBody = `${identifier}\n${commentBody}`;
@@ -90,9 +90,7 @@ export class GitHubClient {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      core.warning(
-        `Failed to post/update PR comment: ${message}`
-      );
+      core.warning(`Failed to post/update PR comment: ${message}`);
       // Don't throw - comment posting failure shouldn't fail the action
       // This commonly happens on fork PRs where GITHUB_TOKEN has limited permissions
     }
@@ -110,7 +108,7 @@ export class GitHubClient {
       core.warning(
         `Failed to detect default branch, falling back to 'main': ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
       return "main";
     }
@@ -140,7 +138,7 @@ export class GitHubClient {
     context: string,
     state: "success" | "failure" | "pending",
     description: string,
-    targetUrl?: string
+    targetUrl?: string,
   ): Promise<void> {
     const { owner, repo } = this.context.repo;
     const sha = this.context.sha;
@@ -154,29 +152,5 @@ export class GitHubClient {
       description,
       target_url: targetUrl,
     });
-  }
-
-  /**
-   * Get the PR diff content
-   */
-  async getPrDiff(): Promise<string> {
-    const prNumber = this.getPullRequestNumber();
-    if (!prNumber) {
-      throw new Error("Cannot get PR diff: Not a pull request");
-    }
-
-    const { owner, repo } = this.context.repo;
-    const { data } = await this.octokit.rest.pulls.get({
-      owner,
-      repo,
-      pull_number: prNumber,
-      mediaType: {
-        format: "diff",
-      },
-    });
-
-    // The type definition for pulls.get doesn't explicitly include string when mediaType is diff,
-    // but the API returns the raw diff string.
-    return data as unknown as string;
   }
 }

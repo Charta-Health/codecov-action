@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { execFileSync } from "node:child_process";
 import * as core from "@actions/core";
 import * as glob from "@actions/glob";
 import type { PatchCoverageResults } from "./analyzers/patch-analyzer.js";
@@ -172,6 +173,18 @@ function verboseLog(message: string, verbose: boolean): void {
   }
 }
 
+function getLocalPatchDiff(baseSha?: string): string {
+  if (!baseSha) {
+    throw new Error("base-sha input is required for local patch diff");
+  }
+
+  core.info(`   Using local git diff from ${baseSha} to HEAD`);
+  return execFileSync("git", ["diff", "--unified=0", baseSha, "HEAD"], {
+    encoding: "utf8",
+    maxBuffer: 100 * 1024 * 1024,
+  });
+}
+
 async function run() {
   try {
     // Get inputs
@@ -266,7 +279,7 @@ async function run() {
         if (githubClient.isPullRequest()) {
           try {
             core.info("🔍 Calculating patch coverage...");
-            const diffContent = await githubClient.getPrDiff();
+            const diffContent = getLocalPatchDiff(baseSha);
             patchCoverage = PatchAnalyzer.analyzePatchCoverage(
               diffContent,
               aggregatedCoverageResults,
@@ -277,12 +290,20 @@ async function run() {
               "patch-coverage",
               patchCoverage.percentage.toString(),
             );
+            core.setOutput("patch-coverage-state", patchCoverage.status);
+            if (patchCoverage.reason) {
+              core.setOutput("patch-coverage-reason", patchCoverage.reason);
+            }
 
             // Enrich aggregated results with patch coverage for the formatter
             aggregatedCoverageResults.patchCoverageRate =
               patchCoverage.percentage;
           } catch (error) {
-            core.warning(`Failed to calculate patch coverage: ${error}`);
+            const message =
+              error instanceof Error ? error.message : String(error);
+            patchCoverage = PatchAnalyzer.unavailable(message);
+            core.setOutput("patch-coverage-state", patchCoverage.status);
+            core.setOutput("patch-coverage-reason", message);
           }
         }
 
@@ -424,6 +445,7 @@ async function run() {
             ? patchCoverage?.changedFiles || []
             : undefined,
         patchTarget: patchTargetForFormatter,
+        patchCoverage,
         patchFileBreakdown: patchCoverage?.fileBreakdown,
         githubContext,
       };

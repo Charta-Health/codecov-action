@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
-import type { PatchFileCoverage } from "../analyzers/patch-analyzer.js";
+import type {
+  PatchCoverageResults,
+  PatchFileCoverage,
+} from "../analyzers/patch-analyzer.js";
 import type { CommentFilesMode } from "../types/config.js";
 import type { AggregatedCoverageResults } from "../types/coverage.js";
 import type {
@@ -18,6 +21,7 @@ export interface ReportFormatOptions {
   filesMode?: CommentFilesMode;
   changedFiles?: string[];
   patchTarget?: number;
+  patchCoverage?: PatchCoverageResults | null;
   patchFileBreakdown?: PatchFileCoverage[];
   githubContext?: GitHubContext;
 }
@@ -144,26 +148,27 @@ export class ReportFormatter {
     results: AggregatedCoverageResults,
     options: ReportFormatOptions,
   ): void {
-    // Calculate metrics
-    const totalMissing = results.totalMisses || 0;
-    // Use explicit patch coverage if available, otherwise fallback to lineRate (legacy/project)
-    const patchRate =
-      results.patchCoverageRate !== undefined
-        ? results.patchCoverageRate.toFixed(2)
-        : results.lineRate.toFixed(2);
-
     const patchTarget = options.patchTarget ?? 80;
+    const patchCoverage =
+      options.patchCoverage ??
+      (results.patchCoverageRate !== undefined
+        ? {
+            status: "complete" as const,
+            coveredLines: 0,
+            missedLines: 0,
+            totalLines: 0,
+            percentage: results.patchCoverageRate,
+            fileBreakdown: options.patchFileBreakdown ?? [],
+            changedFiles: options.changedFiles ?? [],
+            matchedFiles: options.changedFiles ?? [],
+            unmatchedFiles: [],
+          }
+        : undefined);
+    const patchBreakdown = options.patchFileBreakdown;
 
-    // Line 1: Patch coverage (emoji based on patch rate, not project misses)
-    const patchEmoji =
-      parseFloat(patchRate) >= patchTarget ? ":white_check_mark:" : ":x:";
-
-    // Build message with clear separation of patch coverage and project misses
-    let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**.`;
-    if (totalMissing > 0) {
-      patchMessage += ` Project has **${totalMissing}** uncovered lines.`;
-    }
-    lines.push(patchMessage);
+    lines.push(
+      this.formatPatchSummaryLine(patchCoverage, patchBreakdown, patchTarget),
+    );
 
     // Line 2: Project coverage with comparison info
     if (results.comparison) {
@@ -185,7 +190,6 @@ export class ReportFormatter {
     lines.push("");
 
     const filesMode = options.filesMode || "changed";
-    const patchBreakdown = options.patchFileBreakdown;
 
     // When patch file breakdown is available (PR context), use it to show
     // only the uncovered lines within the diff rather than all project-wide
@@ -212,17 +216,10 @@ export class ReportFormatter {
         for (const file of patchFilesWithMissing) {
           const filePath = this.normalizeFilePath(file.path);
           const fileCell = this.formatFileCell(filePath, options.githubContext);
-          const missingCount = file.missedLines.length;
-          const partialCount = file.partialLines.length;
-
-          let linesText = "";
-          if (missingCount > 0 && partialCount > 0) {
-            linesText = `:warning: ${missingCount} Missing and ${partialCount} partials`;
-          } else if (missingCount > 0) {
-            linesText = `:warning: ${missingCount} Missing`;
-          } else if (partialCount > 0) {
-            linesText = `:warning: ${partialCount} partials`;
-          }
+          const linesText = this.formatPatchLineDetails(
+            file.missedLines,
+            file.partialLines,
+          );
 
           lines.push(
             `| ${fileCell} | ${file.percentage.toFixed(2)}% | ${linesText} |`,
@@ -499,6 +496,91 @@ export class ReportFormatter {
     lines.push("");
     lines.push("</details>");
     lines.push("");
+  }
+
+  private countPatchMissedLines(patchBreakdown?: PatchFileCoverage[]): number {
+    if (!patchBreakdown) return 0;
+    return patchBreakdown.reduce(
+      (total, file) => total + file.missedLines.length,
+      0,
+    );
+  }
+
+  private formatPatchSummaryLine(
+    patchCoverage: PatchCoverageResults | null | undefined,
+    patchBreakdown: PatchFileCoverage[] | undefined,
+    patchTarget: number,
+  ): string {
+    if (!patchCoverage) {
+      return ":grey_question: Patch coverage unavailable: not in pull request context.";
+    }
+
+    if (patchCoverage.status === "unavailable") {
+      return `:grey_question: Patch coverage unavailable: ${
+        patchCoverage.reason ?? "unable to calculate patch coverage"
+      }.`;
+    }
+
+    const patchRate = patchCoverage.percentage.toFixed(2);
+    const patchMissedLines = this.countPatchMissedLines(patchBreakdown);
+    const patchEmoji =
+      patchCoverage.status === "complete" &&
+      patchCoverage.percentage < patchTarget
+        ? ":x:"
+        : ":white_check_mark:";
+
+    let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**`;
+    if (patchCoverage.status === "incomplete") {
+      patchMessage += `, but incomplete (${patchCoverage.matchedFiles.length} matched files, ${patchCoverage.unmatchedFiles.length} unmatched files)`;
+    }
+    patchMessage += ".";
+    if (patchMissedLines > 0) {
+      patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
+    }
+    return patchMessage;
+  }
+
+  private formatPatchLineDetails(
+    missedLines: number[],
+    partialLines: number[],
+  ): string {
+    const details: string[] = [];
+
+    if (missedLines.length > 0) {
+      details.push(`Missing: ${this.formatLineRanges(missedLines)}`);
+    }
+
+    if (partialLines.length > 0) {
+      details.push(`Partial: ${this.formatLineRanges(partialLines)}`);
+    }
+
+    return `:warning: ${details.join("<br>")}`;
+  }
+
+  private formatLineRanges(lines: number[]): string {
+    const uniqueLines = [...new Set(lines)].sort((a, b) => a - b);
+    const ranges: string[] = [];
+
+    let start = uniqueLines[0];
+    let previous = uniqueLines[0];
+
+    for (let i = 1; i <= uniqueLines.length; i++) {
+      const current = uniqueLines[i];
+      if (current === previous + 1) {
+        previous = current;
+        continue;
+      }
+
+      ranges.push(start === previous ? `L${start}` : `L${start}-L${previous}`);
+      start = current;
+      previous = current;
+    }
+
+    return ranges.join(", ");
+  }
+
+  private pluralize(word: string, count: number): string {
+    return count === 1 ? word : `${word}s`;
   }
 
   /**
