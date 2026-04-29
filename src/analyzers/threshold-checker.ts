@@ -112,23 +112,13 @@ export const ThresholdChecker = {
 
     // Default target to 80% if set to "auto"
     const target = typeof config.target === "number" ? config.target : 80;
-    if (patchCoverage.status === "incomplete") {
-      return {
-        status: "success",
-        description: `Patch coverage incomplete: ${patchCoverage.percentage.toFixed(
-          2,
-        )}% from ${patchCoverage.matchedFiles.length} matched files, ${
-          patchCoverage.unmatchedFiles.length
-        } unmatched files (target ${target}%)`,
-        informational,
-      };
-    }
-
     const isSuccess = patchCoverage.percentage >= target;
     const descriptionSuffix =
       patchCoverage.reason === "no executable patch lines found"
         ? " (no executable patch lines found)"
-        : "";
+        : patchCoverage.reason === "no coverable changed files found"
+          ? " (no coverable changed files found)"
+          : "";
 
     return {
       status: isSuccess ? "success" : "failure",

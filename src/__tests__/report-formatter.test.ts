@@ -657,31 +657,6 @@ describe("ReportFormatter", () => {
         expect(comment).not.toContain("Project has **20** uncovered lines.");
       });
 
-      it("should show incomplete patch state in the summary", () => {
-        const comment = formatter.formatReport(
-          undefined,
-          coverageWithMissingFiles,
-          {
-            patchCoverage: {
-              status: "incomplete",
-              coveredLines: 8,
-              missedLines: 2,
-              totalLines: 10,
-              percentage: 80,
-              fileBreakdown: patchFileBreakdown,
-              changedFiles: ["src/args.rs", "src/generated.rs"],
-              matchedFiles: ["src/args.rs"],
-              unmatchedFiles: ["src/generated.rs"],
-            },
-            patchFileBreakdown,
-          },
-        );
-
-        expect(comment).toContain(
-          ":warning: Patch coverage is incomplete: **80.00%** from 1 matched files, 1 unmatched files.",
-        );
-      });
-
       it("should show unavailable patch state in the summary", () => {
         const comment = formatter.formatReport(
           undefined,
@@ -731,6 +706,33 @@ describe("ReportFormatter", () => {
           ":white_check_mark: Patch coverage is **100.00%**. No executable patch lines found.",
         );
         expect(comment).not.toContain("Patch coverage unavailable");
+      });
+
+      it("should show no coverable changed files as clean 100% coverage", () => {
+        const comment = formatter.formatReport(
+          undefined,
+          coverageWithMissingFiles,
+          {
+            patchCoverage: {
+              status: "complete",
+              reason: "no coverable changed files found",
+              coveredLines: 0,
+              missedLines: 0,
+              totalLines: 0,
+              percentage: 100,
+              fileBreakdown: [],
+              changedFiles: [".github/workflows/ci.yaml", "tests/foo.test.ts"],
+              matchedFiles: [],
+              unmatchedFiles: [],
+              ignoredFiles: [".github/workflows/ci.yaml", "tests/foo.test.ts"],
+            },
+          },
+        );
+
+        expect(comment).toContain(
+          ":white_check_mark: Patch coverage is **100.00%**. No coverable changed files found.",
+        );
+        expect(comment).not.toContain("Patch coverage is incomplete");
       });
     });
 

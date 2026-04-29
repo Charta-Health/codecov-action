@@ -221,22 +221,26 @@ describe("ThresholdChecker", () => {
       expect(result.description).toContain("no executable patch lines found");
     });
 
-    it("should report incomplete patch coverage without failing hard", () => {
-      const config = { target: 90, threshold: null, informational: false };
+    it("should pass no coverable changed files as clean coverage", () => {
+      const config = { target: 80, threshold: null, informational: false };
       const result = ThresholdChecker.checkPatchStatus(
         {
           ...mockPatchCoverage,
-          status: "incomplete",
-          percentage: 50,
-          matchedFiles: ["src/matched.ts"],
-          unmatchedFiles: ["src/unmatched.ts"],
+          status: "complete",
+          reason: "no coverable changed files found",
+          coveredLines: 0,
+          missedLines: 0,
+          totalLines: 0,
+          percentage: 100,
+          matchedFiles: [],
+          unmatchedFiles: [],
+          ignoredFiles: [".github/workflows/ci.yaml", "tests/unit/foo.test.ts"],
         },
         config,
       );
       expect(result.status).toBe("success");
-      expect(result.description).toContain("Patch coverage incomplete");
-      expect(result.description).toContain("1 matched files");
-      expect(result.description).toContain("1 unmatched files");
+      expect(result.description).toContain("100.00% >= target 80%");
+      expect(result.description).toContain("no coverable changed files found");
     });
 
     it("should use default target of 80% when target is auto", () => {

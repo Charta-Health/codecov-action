@@ -527,19 +527,13 @@ export class ReportFormatter {
 
     const patchRate = patchCoverage.percentage.toFixed(2);
     const patchMissedLines = this.countPatchMissedLines(patchBreakdown);
-    if (patchCoverage.status === "incomplete") {
-      let patchMessage = `:warning: Patch coverage is incomplete: **${patchRate}%** from ${patchCoverage.matchedFiles.length} matched files, ${patchCoverage.unmatchedFiles.length} unmatched files.`;
-      if (patchMissedLines > 0) {
-        patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
-      }
-      return patchMessage;
-    }
-
     const patchEmoji =
       patchCoverage.percentage < patchTarget ? ":x:" : ":white_check_mark:";
     let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**.`;
     if (patchCoverage.reason === "no executable patch lines found") {
       patchMessage += " No executable patch lines found.";
+    } else if (patchCoverage.reason === "no coverable changed files found") {
+      patchMessage += " No coverable changed files found.";
     }
     if (patchMissedLines > 0) {
       patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
