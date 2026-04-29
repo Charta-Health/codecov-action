@@ -232109,7 +232109,7 @@ class ArtifactManager {
             repo: this.repo,
             head_sha: baseSha,
             status: "completed",
-            per_page: 10,
+            per_page: 100,
         });
         return this.filterValidRuns(response.data.workflow_runs);
     }
@@ -232119,7 +232119,7 @@ class ArtifactManager {
             repo: this.repo,
             branch: baseBranch,
             status: "completed",
-            per_page: 10,
+            per_page: 100,
         });
         return this.filterValidRuns(response.data.workflow_runs);
     }
@@ -232144,35 +232144,34 @@ class ArtifactManager {
             ...new Set(branchNames.flatMap((branchName) => this.getArtifactNamesToTry(branchName, type, flags, name))),
         ];
     }
-    findArtifact(artifacts, artifactNamesToTry, type, flags, name) {
-        const exactMatch = artifactNamesToTry
-            .map((artifactName) => artifacts.find((a) => a.name === artifactName && !a.expired))
-            .find(Boolean);
-        if (exactMatch) {
-            return exactMatch;
+    findArtifacts(artifacts, artifactNamesToTry, type, flags, name) {
+        const exactMatches = artifactNamesToTry
+            .flatMap((artifactName) => artifacts.filter((a) => a.name === artifactName && !a.expired))
+            .filter((artifact, index, matches) => matches.findIndex((a) => a.id === artifact.id) === index);
+        if (exactMatches.length > 0) {
+            return exactMatches;
         }
         if (flags?.length || name) {
-            return undefined;
+            return [];
         }
-        return artifacts.find((a) => !a.expired &&
+        return artifacts.filter((a) => !a.expired &&
             a.name.startsWith(`codecov-${type}-results-`) &&
             (a.name.endsWith(`-${type}-report`) ||
                 a.name.includes(`-${type}-report-`)));
     }
-    async findArtifactInRuns(runs, baseBranch, type, flags, name) {
+    async findArtifactsInRuns(runs, baseBranch, type, flags, name) {
+        const matches = [];
         for (const run of runs) {
             const artifactNamesToTry = this.getArtifactNamesForRun(baseBranch, run, type, flags, name);
-            const artifacts = await this.octokit.rest.actions.listWorkflowRunArtifacts({
+            const artifactResponse = await this.octokit.rest.actions.listWorkflowRunArtifacts({
                 owner: this.owner,
                 repo: this.repo,
                 run_id: run.id,
             });
-            const artifact = this.findArtifact(artifacts.data.artifacts, artifactNamesToTry, type, flags, name);
-            if (artifact) {
-                return { artifact, run };
-            }
+            const runArtifacts = this.findArtifacts(artifactResponse.data.artifacts, artifactNamesToTry, type, flags, name);
+            matches.push(...runArtifacts.map((artifact) => ({ artifact, run })));
         }
-        return null;
+        return matches;
     }
     async downloadArtifactZip(artifact, tmpPrefix) {
         const download = await this.octokit.rest.actions.downloadArtifact({
@@ -232210,12 +232209,22 @@ class ArtifactManager {
             ];
             coreExports.info(`📥 Attempting to download base test results: ${artifactNamesToTry[0]}`);
             const tryRuns = async (runs) => {
-                const match = await this.findArtifactInRuns(runs, baseBranch, "test", undefined, name);
-                if (!match) {
-                    return null;
+                const matches = await this.findArtifactsInRuns(runs, baseBranch, "test", undefined, name);
+                for (const match of matches) {
+                    coreExports.info(`Found test artifact '${match.artifact.name}' from run #${match.run.run_number}`);
+                    try {
+                        const result = await this.downloadAndReadTestArtifact(match.artifact);
+                        if (result) {
+                            return result;
+                        }
+                    }
+                    catch (error) {
+                        const message = error instanceof Error ? error.message : "Unknown error";
+                        coreExports.warning(`Failed to read test artifact '${match.artifact.name}' from run #${match.run.run_number}: ${message}`);
+                    }
+                    coreExports.warning(`Test artifact '${match.artifact.name}' from run #${match.run.run_number} was unreadable. Trying next candidate.`);
                 }
-                coreExports.info(`Found test artifact '${match.artifact.name}' from run #${match.run.run_number}`);
-                return this.downloadAndReadTestArtifact(match.artifact);
+                return null;
             };
             if (baseSha) {
                 const shaRuns = await this.fetchWorkflowRunsForSha(baseSha);
@@ -232266,12 +232275,22 @@ class ArtifactManager {
                 coreExports.info(`   Looking for flags: ${flags.join(", ")}`);
             }
             const tryRuns = async (runs) => {
-                const match = await this.findArtifactInRuns(runs, baseBranch, "coverage", flags, name);
-                if (!match) {
-                    return null;
+                const matches = await this.findArtifactsInRuns(runs, baseBranch, "coverage", flags, name);
+                for (const match of matches) {
+                    coreExports.info(`Found coverage artifact '${match.artifact.name}' from run #${match.run.run_number}`);
+                    try {
+                        const result = await this.downloadAndReadCoverageArtifact(match.artifact);
+                        if (result) {
+                            return result;
+                        }
+                    }
+                    catch (error) {
+                        const message = error instanceof Error ? error.message : "Unknown error";
+                        coreExports.warning(`Failed to read coverage artifact '${match.artifact.name}' from run #${match.run.run_number}: ${message}`);
+                    }
+                    coreExports.warning(`Coverage artifact '${match.artifact.name}' from run #${match.run.run_number} was unreadable. Trying next candidate.`);
                 }
-                coreExports.info(`Found coverage artifact '${match.artifact.name}' from run #${match.run.run_number}`);
-                return this.downloadAndReadCoverageArtifact(match.artifact);
+                return null;
             };
             if (baseSha) {
                 const shaRuns = await this.fetchWorkflowRunsForSha(baseSha);

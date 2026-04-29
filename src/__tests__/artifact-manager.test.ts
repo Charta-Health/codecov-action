@@ -80,14 +80,14 @@ describe("ArtifactManager base SHA lookup", () => {
       repo: "repo",
       head_sha: "abc123",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
     expect(listWorkflowRunsForRepo).toHaveBeenNthCalledWith(2, {
       owner: "owner",
       repo: "repo",
       branch: "main",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
   });
 
@@ -123,14 +123,14 @@ describe("ArtifactManager base SHA lookup", () => {
       repo: "repo",
       head_sha: "def456",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
     expect(listWorkflowRunsForRepo).toHaveBeenNthCalledWith(2, {
       owner: "owner",
       repo: "repo",
       branch: "main",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
   });
 
@@ -154,7 +154,7 @@ describe("ArtifactManager base SHA lookup", () => {
       repo: "repo",
       branch: "develop",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
   });
 
@@ -186,14 +186,14 @@ describe("ArtifactManager base SHA lookup", () => {
       repo: "repo",
       head_sha: "ghi789",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
     expect(listWorkflowRunsForRepo).toHaveBeenNthCalledWith(2, {
       owner: "owner",
       repo: "repo",
       branch: "main",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
   });
 
@@ -230,14 +230,14 @@ describe("ArtifactManager base SHA lookup", () => {
       repo: "repo",
       head_sha: "jkl012",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
     expect(listWorkflowRunsForRepo).toHaveBeenNthCalledWith(2, {
       owner: "owner",
       repo: "repo",
       branch: "main",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
   });
 
@@ -295,6 +295,76 @@ describe("ArtifactManager base SHA lookup", () => {
       owner: "owner",
       repo: "repo",
       artifact_id: 9001,
+      archive_format: "zip",
+    });
+  });
+
+  it("tries later exact-SHA coverage artifacts when the first matching artifact is unreadable", async () => {
+    const coveragePayload = {
+      totalStatements: 1,
+      coveredStatements: 1,
+      totalConditionals: 0,
+      coveredConditionals: 0,
+      totalMethods: 0,
+      coveredMethods: 0,
+      lineRate: 100,
+      branchRate: 100,
+      files: [],
+    };
+    listWorkflowRunsForRepo.mockResolvedValueOnce({
+      data: {
+        workflow_runs: [
+          { id: 1101, run_number: 31, conclusion: "success" } as WorkflowRun,
+          { id: 1102, run_number: 32, conclusion: "success" } as WorkflowRun,
+        ],
+      },
+    });
+    listWorkflowRunArtifacts
+      .mockResolvedValueOnce({
+        data: {
+          artifacts: [
+            {
+              id: 9201,
+              name: "codecov-coverage-results-main-coverage-report",
+              expired: false,
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          artifacts: [
+            {
+              id: 9202,
+              name: "codecov-coverage-results-main-coverage-report",
+              expired: false,
+            },
+          ],
+        },
+      });
+    downloadArtifact
+      .mockResolvedValueOnce({
+        data: artifactZip("not-coverage-results.json", {}),
+      })
+      .mockResolvedValueOnce({
+        data: artifactZip("coverage-results.json", coveragePayload),
+      });
+
+    const manager = new ArtifactManager("token");
+    const result = await manager.downloadBaseCoverageResults(
+      "main",
+      undefined,
+      undefined,
+      "sha-with-second-good-artifact",
+    );
+
+    expect(result).toEqual(coveragePayload);
+    expect(listWorkflowRunsForRepo).toHaveBeenCalledTimes(1);
+    expect(downloadArtifact).toHaveBeenCalledTimes(2);
+    expect(downloadArtifact).toHaveBeenNthCalledWith(2, {
+      owner: "owner",
+      repo: "repo",
+      artifact_id: 9202,
       archive_format: "zip",
     });
   });
@@ -395,7 +465,7 @@ describe("ArtifactManager base SHA lookup", () => {
       repo: "repo",
       branch: "release",
       status: "completed",
-      per_page: 10,
+      per_page: 100,
     });
   });
 
