@@ -109,8 +109,10 @@ index 0000000..e69de29
     );
 
     expect(result.totalLines).toBe(0);
-    expect(result.percentage).toBe(100); // Default when no lines found
+    expect(result.status).toBe("unavailable");
+    expect(result.percentage).toBe(0);
     expect(result.changedFiles).toEqual(["src/new-file.ts"]);
+    expect(result.matchedFiles).toEqual([]);
     expect(result.unmatchedFiles).toEqual(["src/new-file.ts"]);
   });
 
@@ -149,6 +151,8 @@ index 83db48f..bf269f4 100644
       mockCoverage,
     );
     expect(result2.totalLines).toBe(0); // Line 99 is not in coverage map, so ignored
+    expect(result2.status).toBe("unavailable");
+    expect(result2.reason).toBe("no executable patch lines found");
   });
 
   it("should include non-deleted changed files and dedupe duplicate entries", () => {
@@ -186,7 +190,9 @@ index 0000000..e69de29
       mockCoverage,
     );
 
+    expect(result.status).toBe("incomplete");
     expect(result.changedFiles).toEqual(["src/utils.ts", "src/new-file.ts"]);
+    expect(result.matchedFiles).toEqual(["src/utils.ts"]);
     expect(result.changedFiles).not.toContain("src/removed.ts");
   });
 
@@ -274,7 +280,9 @@ index 0000000..e69de29
     );
 
     expect(result.totalLines).toBe(0);
-    expect(result.percentage).toBe(100);
+    expect(result.status).toBe("unavailable");
+    expect(result.percentage).toBe(0);
+    expect(result.matchedFiles).toEqual([]);
     expect(result.unmatchedFiles).toEqual(["src/utils.ts"]);
   });
 

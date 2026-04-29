@@ -17,6 +17,21 @@ import type { AggregatedTestResults } from "../types/test-results.js";
  */
 const VALID_RUN_CONCLUSIONS = new Set(["success", "failure"]);
 
+type ArtifactType = "test" | "coverage";
+
+type WorkflowRun = {
+  id: number;
+  run_number?: number;
+  conclusion?: string | null;
+  head_branch?: string | null;
+};
+
+type WorkflowArtifact = {
+  id: number;
+  name: string;
+  expired?: boolean;
+};
+
 /**
  * Manages artifact upload and download for test results comparison
  */
@@ -203,48 +218,183 @@ export class ArtifactManager {
     }
   }
 
-  /**
-   * Fetch valid completed workflow runs, optionally trying a specific commit
-   * SHA first and falling back to the base branch.
-   */
-  private async fetchValidWorkflowRuns(
-    baseBranch: string,
-    baseSha?: string,
-  ) {
-    // If a specific SHA was requested, try it first
-    if (baseSha) {
-      core.info(`   Looking for specific commit SHA: ${baseSha}`);
-      const shaResponse =
-        await this.octokit.rest.actions.listWorkflowRunsForRepo({
-          owner: this.owner,
-          repo: this.repo,
-          head_sha: baseSha,
-          status: "completed",
-          per_page: 10,
-        });
-      const shaRuns = shaResponse.data.workflow_runs.filter(
-        (r) => r.conclusion && VALID_RUN_CONCLUSIONS.has(r.conclusion),
-      );
-      if (shaRuns.length > 0) {
-        return shaRuns;
-      }
-      core.info(
-        `ℹ️ No completed workflow runs found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`,
-      );
-    }
-
-    // Fall back to branch-based lookup
-    const branchResponse =
-      await this.octokit.rest.actions.listWorkflowRunsForRepo({
-        owner: this.owner,
-        repo: this.repo,
-        branch: baseBranch,
-        status: "completed",
-        per_page: 10,
-      });
-    return branchResponse.data.workflow_runs.filter(
+  private filterValidRuns(runs: WorkflowRun[]): WorkflowRun[] {
+    return runs.filter(
       (r) => r.conclusion && VALID_RUN_CONCLUSIONS.has(r.conclusion),
     );
+  }
+
+  private async fetchWorkflowRunsForSha(
+    baseSha: string,
+  ): Promise<WorkflowRun[]> {
+    core.info(`   Looking for specific commit SHA: ${baseSha}`);
+    const response = await this.octokit.rest.actions.listWorkflowRunsForRepo({
+      owner: this.owner,
+      repo: this.repo,
+      head_sha: baseSha,
+      status: "completed",
+      per_page: 100,
+    });
+    return this.filterValidRuns(response.data.workflow_runs as WorkflowRun[]);
+  }
+
+  private async fetchWorkflowRunsForBranch(
+    baseBranch: string,
+  ): Promise<WorkflowRun[]> {
+    const response = await this.octokit.rest.actions.listWorkflowRunsForRepo({
+      owner: this.owner,
+      repo: this.repo,
+      branch: baseBranch,
+      status: "completed",
+      per_page: 100,
+    });
+    return this.filterValidRuns(response.data.workflow_runs as WorkflowRun[]);
+  }
+
+  private getArtifactNamesToTry(
+    branchName: string,
+    type: ArtifactType,
+    flags?: string[],
+    name?: string,
+  ): string[] {
+    return [
+      ...new Set([
+        this.getArtifactName(branchName, type, flags, name),
+        this.getArtifactName(branchName, type),
+        this.getLegacyArtifactName(branchName, type, flags, name),
+        this.getLegacyArtifactName(branchName, type),
+      ]),
+    ];
+  }
+
+  private getArtifactNamesForRun(
+    baseBranch: string,
+    run: WorkflowRun,
+    type: ArtifactType,
+    flags?: string[],
+    name?: string,
+  ): string[] {
+    const branchNames = [
+      baseBranch,
+      ...(run.head_branch && run.head_branch !== baseBranch
+        ? [run.head_branch]
+        : []),
+    ];
+    return [
+      ...new Set(
+        branchNames.flatMap((branchName) =>
+          this.getArtifactNamesToTry(branchName, type, flags, name),
+        ),
+      ),
+    ];
+  }
+
+  private findArtifacts(
+    artifacts: WorkflowArtifact[],
+    artifactNamesToTry: string[],
+    type: ArtifactType,
+    flags?: string[],
+    name?: string,
+  ): WorkflowArtifact[] {
+    const exactMatches = artifactNamesToTry
+      .flatMap((artifactName) =>
+        artifacts.filter((a) => a.name === artifactName && !a.expired),
+      )
+      .filter(
+        (artifact, index, matches) =>
+          matches.findIndex((a) => a.id === artifact.id) === index,
+      );
+    if (exactMatches.length > 0) {
+      return exactMatches;
+    }
+
+    if (flags?.length || name) {
+      return [];
+    }
+
+    return artifacts.filter(
+      (a) =>
+        !a.expired &&
+        a.name.startsWith(`codecov-${type}-results-`) &&
+        (a.name.endsWith(`-${type}-report`) ||
+          a.name.includes(`-${type}-report-`)),
+    );
+  }
+
+  private async findArtifactsInRuns(
+    runs: WorkflowRun[],
+    baseBranch: string,
+    type: ArtifactType,
+    flags?: string[],
+    name?: string,
+  ): Promise<{ artifact: WorkflowArtifact; run: WorkflowRun }[]> {
+    const matches: { artifact: WorkflowArtifact; run: WorkflowRun }[] = [];
+    for (const run of runs) {
+      const artifactNamesToTry = this.getArtifactNamesForRun(
+        baseBranch,
+        run,
+        type,
+        flags,
+        name,
+      );
+      const artifactResponse =
+        await this.octokit.rest.actions.listWorkflowRunArtifacts({
+          owner: this.owner,
+          repo: this.repo,
+          run_id: run.id,
+        });
+      const runArtifacts = this.findArtifacts(
+        artifactResponse.data.artifacts as WorkflowArtifact[],
+        artifactNamesToTry,
+        type,
+        flags,
+        name,
+      );
+      matches.push(...runArtifacts.map((artifact) => ({ artifact, run })));
+    }
+    return matches;
+  }
+
+  private async downloadArtifactZip(
+    artifact: WorkflowArtifact,
+    tmpPrefix: string,
+  ): Promise<{ zipPath: string; tmpDir: string }> {
+    const download = await this.octokit.rest.actions.downloadArtifact({
+      owner: this.owner,
+      repo: this.repo,
+      artifact_id: artifact.id,
+      archive_format: "zip",
+    });
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), tmpPrefix));
+    const zipPath = path.join(tmpDir, "artifact.zip");
+    fs.writeFileSync(zipPath, Buffer.from(download.data as ArrayBuffer));
+    return { zipPath, tmpDir };
+  }
+
+  private async downloadAndReadTestArtifact(
+    artifact: WorkflowArtifact,
+  ): Promise<AggregatedTestResults | null> {
+    const { zipPath, tmpDir } = await this.downloadArtifactZip(
+      artifact,
+      "codecov-base-test-",
+    );
+    const results = this.extractAndReadResults(zipPath, tmpDir);
+    fs.unlinkSync(zipPath);
+    fs.rmSync(tmpDir, { recursive: true });
+    return results;
+  }
+
+  private async downloadAndReadCoverageArtifact(
+    artifact: WorkflowArtifact,
+  ): Promise<AggregatedCoverageResults | null> {
+    const { zipPath, tmpDir } = await this.downloadArtifactZip(
+      artifact,
+      "codecov-base-coverage-",
+    );
+    const results = this.extractAndReadCoverageResults(zipPath, tmpDir);
+    fs.unlinkSync(zipPath);
+    fs.rmSync(tmpDir, { recursive: true });
+    return results;
   }
 
   /**
@@ -256,95 +406,70 @@ export class ArtifactManager {
     baseSha?: string,
   ): Promise<AggregatedTestResults | null> {
     try {
-      const artifactName = this.getArtifactName(
-        baseBranch,
-        "test",
-        undefined,
-        name,
-      );
-      const legacyArtifactName = this.getLegacyArtifactName(
-        baseBranch,
-        "test",
-        undefined,
-        name,
-      );
-      const unflaggedArtifactName = this.getArtifactName(baseBranch, "test");
-      const legacyUnflaggedArtifactName = this.getLegacyArtifactName(
-        baseBranch,
-        "test",
-      );
-
       const artifactNamesToTry = [
-        ...new Set([
-          artifactName,
-          unflaggedArtifactName,
-          legacyArtifactName,
-          legacyUnflaggedArtifactName,
-        ]),
+        ...new Set(
+          this.getArtifactNamesToTry(baseBranch, "test", undefined, name),
+        ),
       ];
 
       core.info(
         `📥 Attempting to download base test results: ${artifactNamesToTry[0]}`,
       );
 
-      const validRuns = await this.fetchValidWorkflowRuns(baseBranch, baseSha);
-
-      if (validRuns.length === 0) {
-        core.info(
-          `ℹ️ No completed workflow runs found for branch '${baseBranch}'`,
+      const tryRuns = async (runs: WorkflowRun[]) => {
+        const matches = await this.findArtifactsInRuns(
+          runs,
+          baseBranch,
+          "test",
+          undefined,
+          name,
         );
+        for (const match of matches) {
+          core.info(
+            `Found test artifact '${match.artifact.name}' from run #${match.run.run_number}`,
+          );
+          try {
+            const result = await this.downloadAndReadTestArtifact(
+              match.artifact,
+            );
+            if (result) {
+              return result;
+            }
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "Unknown error";
+            core.warning(
+              `Failed to read test artifact '${match.artifact.name}' from run #${match.run.run_number}: ${message}`,
+            );
+          }
+          core.warning(
+            `Test artifact '${match.artifact.name}' from run #${match.run.run_number} was unreadable. Trying next candidate.`,
+          );
+        }
         return null;
+      };
+
+      if (baseSha) {
+        const shaRuns = await this.fetchWorkflowRunsForSha(baseSha);
+        if (shaRuns.length === 0) {
+          core.info(
+            `ℹ️ No completed workflow runs found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`,
+          );
+        } else {
+          const result = await tryRuns(shaRuns);
+          if (result) {
+            return result;
+          }
+          core.info(
+            `ℹ️ No usable test artifact found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`,
+          );
+        }
       }
 
-      // Look through recent runs for the artifact
-      for (const run of validRuns) {
-        const artifacts =
-          await this.octokit.rest.actions.listWorkflowRunArtifacts({
-            owner: this.owner,
-            repo: this.repo,
-            run_id: run.id,
-          });
-
-        for (const nameToTry of artifactNamesToTry) {
-          const artifact = artifacts.data.artifacts.find(
-            (a) => a.name === nameToTry && !a.expired,
-          );
-
-          if (artifact) {
-            core.info(
-              `Found test artifact '${nameToTry}' from run #${run.run_number}`,
-            );
-
-            // Download the artifact
-            const download = await this.octokit.rest.actions.downloadArtifact({
-              owner: this.owner,
-              repo: this.repo,
-              artifact_id: artifact.id,
-              archive_format: "zip",
-            });
-
-            // Create temp directory and save the zip
-            const tmpDir = fs.mkdtempSync(
-              path.join(os.tmpdir(), "codecov-base-test-"),
-            );
-            const zipPath = path.join(tmpDir, "artifact.zip");
-
-            // The download is a buffer, write it to file
-            fs.writeFileSync(
-              zipPath,
-              Buffer.from(download.data as ArrayBuffer),
-            );
-
-            // Extract and read the results
-            const results = this.extractAndReadResults(zipPath, tmpDir);
-
-            // Clean up
-            fs.unlinkSync(zipPath);
-            fs.rmSync(tmpDir, { recursive: true });
-
-            return results;
-          }
-        }
+      const branchRuns = await this.fetchWorkflowRunsForBranch(baseBranch);
+      const branchResult = await tryRuns(branchRuns);
+      if (branchResult) {
+        return branchResult;
       }
 
       core.info(
@@ -377,34 +502,10 @@ export class ArtifactManager {
       // 2. Unflagged with job ID
       // 3. Flagged/named without job ID (legacy format)
       // 4. Unflagged without job ID (legacy format)
-      const flaggedArtifactName = this.getArtifactName(
-        baseBranch,
-        "coverage",
-        flags,
-        name,
-      );
-      const unflaggedArtifactName = this.getArtifactName(
-        baseBranch,
-        "coverage",
-      );
-      const legacyFlaggedArtifactName = this.getLegacyArtifactName(
-        baseBranch,
-        "coverage",
-        flags,
-        name,
-      );
-      const legacyUnflaggedArtifactName = this.getLegacyArtifactName(
-        baseBranch,
-        "coverage",
-      );
-
       const artifactNamesToTry = [
-        ...new Set([
-          flaggedArtifactName,
-          unflaggedArtifactName,
-          legacyFlaggedArtifactName,
-          legacyUnflaggedArtifactName,
-        ]),
+        ...new Set(
+          this.getArtifactNamesToTry(baseBranch, "coverage", flags, name),
+        ),
       ];
 
       core.info(
@@ -415,65 +516,60 @@ export class ArtifactManager {
         core.info(`   Looking for flags: ${flags.join(", ")}`);
       }
 
-      const validRuns = await this.fetchValidWorkflowRuns(baseBranch, baseSha);
-
-      if (validRuns.length === 0) {
-        core.info(
-          `ℹ️ No completed workflow runs found for branch '${baseBranch}'`,
+      const tryRuns = async (runs: WorkflowRun[]) => {
+        const matches = await this.findArtifactsInRuns(
+          runs,
+          baseBranch,
+          "coverage",
+          flags,
+          name,
         );
+        for (const match of matches) {
+          core.info(
+            `Found coverage artifact '${match.artifact.name}' from run #${match.run.run_number}`,
+          );
+          try {
+            const result = await this.downloadAndReadCoverageArtifact(
+              match.artifact,
+            );
+            if (result) {
+              return result;
+            }
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "Unknown error";
+            core.warning(
+              `Failed to read coverage artifact '${match.artifact.name}' from run #${match.run.run_number}: ${message}`,
+            );
+          }
+          core.warning(
+            `Coverage artifact '${match.artifact.name}' from run #${match.run.run_number} was unreadable. Trying next candidate.`,
+          );
+        }
         return null;
+      };
+
+      if (baseSha) {
+        const shaRuns = await this.fetchWorkflowRunsForSha(baseSha);
+        if (shaRuns.length === 0) {
+          core.info(
+            `ℹ️ No completed workflow runs found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`,
+          );
+        } else {
+          const result = await tryRuns(shaRuns);
+          if (result) {
+            return result;
+          }
+          core.info(
+            `ℹ️ No usable coverage artifact found for SHA '${baseSha}'. Falling back to branch '${baseBranch}'`,
+          );
+        }
       }
 
-      // Look through recent runs for the artifact
-      for (const run of validRuns) {
-        const artifacts =
-          await this.octokit.rest.actions.listWorkflowRunArtifacts({
-            owner: this.owner,
-            repo: this.repo,
-            run_id: run.id,
-          });
-
-        // Try to find artifact with each name in order of preference
-        for (const artifactName of artifactNamesToTry) {
-          const artifact = artifacts.data.artifacts.find(
-            (a) => a.name === artifactName && !a.expired,
-          );
-
-          if (artifact) {
-            core.info(
-              `Found coverage artifact '${artifactName}' from run #${run.run_number}`,
-            );
-
-            // Download the artifact
-            const download = await this.octokit.rest.actions.downloadArtifact({
-              owner: this.owner,
-              repo: this.repo,
-              artifact_id: artifact.id,
-              archive_format: "zip",
-            });
-
-            // Create temp directory and save the zip
-            const tmpDir = fs.mkdtempSync(
-              path.join(os.tmpdir(), "codecov-base-coverage-"),
-            );
-            const zipPath = path.join(tmpDir, "artifact.zip");
-
-            // The download is a buffer, write it to file
-            fs.writeFileSync(
-              zipPath,
-              Buffer.from(download.data as ArrayBuffer),
-            );
-
-            // Extract and read the coverage results
-            const results = this.extractAndReadCoverageResults(zipPath, tmpDir);
-
-            // Clean up
-            fs.unlinkSync(zipPath);
-            fs.rmSync(tmpDir, { recursive: true });
-
-            return results;
-          }
-        }
+      const branchRuns = await this.fetchWorkflowRunsForBranch(baseBranch);
+      const branchResult = await tryRuns(branchRuns);
+      if (branchResult) {
+        return branchResult;
       }
 
       core.info(

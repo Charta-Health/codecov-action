@@ -6,12 +6,15 @@ import type {
 } from "../types/coverage.js";
 
 export interface PatchCoverageResults {
+  status: "complete" | "incomplete" | "unavailable";
+  reason?: string;
   coveredLines: number;
   missedLines: number;
   totalLines: number;
   percentage: number;
   fileBreakdown: PatchFileCoverage[];
   changedFiles: string[];
+  matchedFiles: string[];
   unmatchedFiles: string[];
 }
 
@@ -90,6 +93,22 @@ function findCoverageFile(
 }
 
 export const PatchAnalyzer = {
+  unavailable(reason: string): PatchCoverageResults {
+    core.warning(`Patch coverage unavailable: ${reason}`);
+    return {
+      status: "unavailable",
+      reason,
+      coveredLines: 0,
+      missedLines: 0,
+      totalLines: 0,
+      percentage: 0,
+      fileBreakdown: [],
+      changedFiles: [],
+      matchedFiles: [],
+      unmatchedFiles: [],
+    };
+  },
+
   /**
    * Calculate patch coverage by intersecting coverage results with git diff
    */
@@ -100,6 +119,7 @@ export const PatchAnalyzer = {
     const diffFiles = parseDiff(diffContent);
     const fileBreakdown: PatchFileCoverage[] = [];
     const changedFiles = new Set<string>();
+    const matchedFiles = new Set<string>();
     const unmatchedFiles: string[] = [];
 
     let totalCovered = 0;
@@ -131,6 +151,7 @@ export const PatchAnalyzer = {
         unmatchedFiles.push(diffFile.to);
         continue;
       }
+      matchedFiles.add(diffFile.to);
 
       const coveredLines: number[] = [];
       const missedLines: number[] = [];
@@ -192,20 +213,36 @@ export const PatchAnalyzer = {
     }
 
     const totalLines = totalCovered + totalMissed;
+    const unavailableReason =
+      matchedFiles.size === 0
+        ? "no changed files matched coverage data"
+        : totalLines === 0
+          ? "no executable patch lines found"
+          : undefined;
+    const status = unavailableReason
+      ? "unavailable"
+      : unmatchedFiles.length > 0
+        ? "incomplete"
+        : "complete";
     const percentage =
-      totalLines === 0 ? 100 : (totalCovered / totalLines) * 100;
+      status === "unavailable" ? 0 : (totalCovered / totalLines) * 100;
 
     // Warn when no changed files could be matched to coverage data
-    if (unmatchedFiles.length > 0 && totalLines === 0) {
+    if (
+      unavailableReason === "no changed files matched coverage data" &&
+      unmatchedFiles.length > 0
+    ) {
       const sampleCoveragePaths = coverageResults.files
         .slice(0, 3)
         .map((f) => f.path);
       core.warning(
-        `Patch coverage defaulted to 100% because no changed files matched coverage data.\n` +
+        `Patch coverage unavailable because no changed files matched coverage data.\n` +
           `  Unmatched diff files: ${unmatchedFiles.join(", ")}\n` +
           `  Sample coverage paths: ${sampleCoveragePaths.join(", ")}\n` +
           `  This usually indicates a path format mismatch between your coverage tool and the repository.`,
       );
+    } else if (status === "unavailable" && unavailableReason) {
+      core.warning(`Patch coverage unavailable: ${unavailableReason}.`);
     } else if (unmatchedFiles.length > 0) {
       core.info(
         `  Some changed files had no coverage data: ${unmatchedFiles.join(", ")}`,
@@ -213,17 +250,28 @@ export const PatchAnalyzer = {
     }
 
     core.info(`Patch Coverage Analysis:`);
+    core.info(`  Status: ${status}`);
+    core.info(`  Changed Files: ${changedFiles.size}`);
+    core.info(`  Matched Files: ${matchedFiles.size}`);
+    core.info(`  Unmatched Files: ${unmatchedFiles.length}`);
     core.info(`  Covered Lines: ${totalCovered}`);
     core.info(`  Missed Lines: ${totalMissed}`);
-    core.info(`  Percentage: ${percentage.toFixed(2)}%`);
+    core.info(
+      `  Percentage: ${
+        status === "unavailable" ? "N/A" : `${percentage.toFixed(2)}%`
+      }`,
+    );
 
     return {
+      status,
+      reason: unavailableReason,
       coveredLines: totalCovered,
       missedLines: totalMissed,
       totalLines,
       percentage,
       fileBreakdown,
       changedFiles: [...changedFiles],
+      matchedFiles: [...matchedFiles],
       unmatchedFiles,
     };
   },

@@ -495,6 +495,11 @@ Use `config.files` to control the "Files with missing lines" section in both Job
 - `changed`: show only non-deleted files from the PR diff
 - `none`: hide the section entirely
 
+In pull request comments, the report uses patch coverage data: the headline counts
+only uncovered lines touched by the PR, and the file table lists the affected line
+ranges. Outside of pull request context, the table falls back to project-wide
+missing/partial line counts.
+
 ## Permissions
 
 ```yaml

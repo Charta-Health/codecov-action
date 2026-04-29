@@ -21,6 +21,7 @@ import { TestResultsComparator } from "./utils/comparison.js";
 import { CoverageComparator } from "./utils/coverage-comparison.js";
 import { FileFinder } from "./utils/file-finder.js";
 import { GitHubClient } from "./utils/github-client.js";
+import { getLocalPatchDiff } from "./utils/local-patch-diff.js";
 
 /**
  * Coverage input configuration
@@ -266,7 +267,7 @@ async function run() {
         if (githubClient.isPullRequest()) {
           try {
             core.info("🔍 Calculating patch coverage...");
-            const diffContent = await githubClient.getPrDiff();
+            const diffContent = getLocalPatchDiff(baseSha, baseBranch);
             patchCoverage = PatchAnalyzer.analyzePatchCoverage(
               diffContent,
               aggregatedCoverageResults,
@@ -277,12 +278,20 @@ async function run() {
               "patch-coverage",
               patchCoverage.percentage.toString(),
             );
+            core.setOutput("patch-coverage-state", patchCoverage.status);
+            if (patchCoverage.reason) {
+              core.setOutput("patch-coverage-reason", patchCoverage.reason);
+            }
 
             // Enrich aggregated results with patch coverage for the formatter
             aggregatedCoverageResults.patchCoverageRate =
               patchCoverage.percentage;
           } catch (error) {
-            core.warning(`Failed to calculate patch coverage: ${error}`);
+            const message =
+              error instanceof Error ? error.message : String(error);
+            patchCoverage = PatchAnalyzer.unavailable(message);
+            core.setOutput("patch-coverage-state", patchCoverage.status);
+            core.setOutput("patch-coverage-reason", message);
           }
         }
 
@@ -424,6 +433,7 @@ async function run() {
             ? patchCoverage?.changedFiles || []
             : undefined,
         patchTarget: patchTargetForFormatter,
+        patchCoverage,
         patchFileBreakdown: patchCoverage?.fileBreakdown,
         githubContext,
       };
