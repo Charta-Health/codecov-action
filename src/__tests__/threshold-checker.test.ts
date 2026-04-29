@@ -202,6 +202,25 @@ describe("ThresholdChecker", () => {
       expect(result.description).toContain("could not compute local git diff");
     });
 
+    it("should pass no executable patch lines as clean coverage", () => {
+      const config = { target: 80, threshold: null, informational: false };
+      const result = ThresholdChecker.checkPatchStatus(
+        {
+          ...mockPatchCoverage,
+          status: "complete",
+          reason: "no executable patch lines found",
+          coveredLines: 0,
+          missedLines: 0,
+          totalLines: 0,
+          percentage: 100,
+        },
+        config,
+      );
+      expect(result.status).toBe("success");
+      expect(result.description).toContain("100.00% >= target 80%");
+      expect(result.description).toContain("no executable patch lines found");
+    });
+
     it("should report incomplete patch coverage without failing hard", () => {
       const config = { target: 90, threshold: null, informational: false };
       const result = ThresholdChecker.checkPatchStatus(

@@ -706,6 +706,32 @@ describe("ReportFormatter", () => {
           "Patch coverage unavailable: could not compute local git diff.",
         );
       });
+
+      it("should show no executable patch lines as clean 100% coverage", () => {
+        const comment = formatter.formatReport(
+          undefined,
+          coverageWithMissingFiles,
+          {
+            patchCoverage: {
+              status: "complete",
+              reason: "no executable patch lines found",
+              coveredLines: 0,
+              missedLines: 0,
+              totalLines: 0,
+              percentage: 100,
+              fileBreakdown: [],
+              changedFiles: ["src/changed-file.ts"],
+              matchedFiles: ["src/changed-file.ts"],
+              unmatchedFiles: [],
+            },
+          },
+        );
+
+        expect(comment).toContain(
+          ":white_check_mark: Patch coverage is **100.00%**. No executable patch lines found.",
+        );
+        expect(comment).not.toContain("Patch coverage unavailable");
+      });
     });
 
     describe("File links with githubContext", () => {
