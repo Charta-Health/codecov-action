@@ -2,7 +2,6 @@ import * as fs from 'node:fs';
 import fs__default from 'node:fs';
 import * as path$1 from 'node:path';
 import path__default from 'node:path';
-import { execFileSync } from 'node:child_process';
 import require$$0$4 from 'os';
 import require$$0$5 from 'crypto';
 import require$$0$6 from 'fs';
@@ -48,6 +47,7 @@ import require$$0$h from 'constants';
 import require$$2$b from 'node:url';
 import require$$2$a from 'node:string_decoder';
 import require$$0$i from 'punycode';
+import { execFileSync } from 'node:child_process';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -232719,6 +232719,75 @@ class FileFinder {
     }
 }
 
+const GIT_MAX_BUFFER = 100 * 1024 * 1024;
+function runGit(args) {
+    return execFileSync("git", args, {
+        encoding: "utf8",
+        maxBuffer: GIT_MAX_BUFFER,
+    }).trim();
+}
+function fetchBaseBranch(baseBranch) {
+    execFileSync("git", [
+        "fetch",
+        "--no-tags",
+        "--prune",
+        "--depth=100",
+        "origin",
+        `+refs/heads/${baseBranch}:refs/remotes/origin/${baseBranch}`,
+    ], {
+        encoding: "utf8",
+        maxBuffer: GIT_MAX_BUFFER,
+    });
+}
+function normalizeBranchName(baseBranch) {
+    return baseBranch
+        .trim()
+        .replace(/^refs\/heads\//, "")
+        .replace(/^origin\//, "");
+}
+function resolveLocalPatchBaseSha(baseSha, baseBranch) {
+    const explicitBaseSha = baseSha?.trim();
+    if (explicitBaseSha) {
+        coreExports.info(`   Using explicit base-sha for local patch diff: ${explicitBaseSha}`);
+        return explicitBaseSha;
+    }
+    const normalizedBaseBranch = normalizeBranchName(baseBranch);
+    if (!normalizedBaseBranch) {
+        throw new Error("base-sha input is missing and base-branch could not be resolved");
+    }
+    const remoteBaseRef = `origin/${normalizedBaseBranch}`;
+    coreExports.info(`   base-sha input not provided; deriving local patch base from ${remoteBaseRef}`);
+    try {
+        fetchBaseBranch(normalizedBaseBranch);
+    }
+    catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        coreExports.warning(`Unable to fetch base branch '${normalizedBaseBranch}' before local patch diff: ${message}`);
+    }
+    for (const ref of [remoteBaseRef, normalizedBaseBranch]) {
+        try {
+            const baseCommit = runGit(["rev-parse", "--verify", `${ref}^{commit}`]);
+            const mergeBase = runGit(["merge-base", "HEAD", baseCommit]);
+            if (mergeBase) {
+                coreExports.info(`   Derived local patch base ${mergeBase} from ${ref}`);
+                return mergeBase;
+            }
+        }
+        catch {
+            coreExports.info(`   Could not derive local patch base from ${ref}`);
+        }
+    }
+    throw new Error(`Unable to derive local patch base from base-branch '${baseBranch}'. Provide base-sha or ensure '${remoteBaseRef}' is available locally.`);
+}
+function getLocalPatchDiff(baseSha, baseBranch) {
+    const patchBaseSha = resolveLocalPatchBaseSha(baseSha, baseBranch);
+    coreExports.info(`   Using local git diff from ${patchBaseSha} to HEAD`);
+    return execFileSync("git", ["diff", "--unified=0", patchBaseSha, "HEAD"], {
+        encoding: "utf8",
+        maxBuffer: GIT_MAX_BUFFER,
+    });
+}
+
 /**
  * Parse coverage configuration from action inputs and YAML config
  */
@@ -232824,16 +232893,6 @@ function verboseLog(message, verbose) {
         coreExports.info(`[verbose] ${message}`);
     }
 }
-function getLocalPatchDiff(baseSha) {
-    if (!baseSha) {
-        throw new Error("base-sha input is required for local patch diff");
-    }
-    coreExports.info(`   Using local git diff from ${baseSha} to HEAD`);
-    return execFileSync("git", ["diff", "--unified=0", baseSha, "HEAD"], {
-        encoding: "utf8",
-        maxBuffer: 100 * 1024 * 1024,
-    });
-}
 async function run() {
     try {
         // Get inputs
@@ -232894,7 +232953,7 @@ async function run() {
                 if (githubClient.isPullRequest()) {
                     try {
                         coreExports.info("🔍 Calculating patch coverage...");
-                        const diffContent = getLocalPatchDiff(baseSha);
+                        const diffContent = getLocalPatchDiff(baseSha, baseBranch);
                         patchCoverage = PatchAnalyzer.analyzePatchCoverage(diffContent, aggregatedCoverageResults);
                         // Set patch coverage output
                         coreExports.setOutput("patch-coverage", patchCoverage.percentage.toString());

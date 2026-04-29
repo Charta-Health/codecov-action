@@ -1,6 +1,5 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { execFileSync } from "node:child_process";
 import * as core from "@actions/core";
 import * as glob from "@actions/glob";
 import type { PatchCoverageResults } from "./analyzers/patch-analyzer.js";
@@ -22,6 +21,7 @@ import { TestResultsComparator } from "./utils/comparison.js";
 import { CoverageComparator } from "./utils/coverage-comparison.js";
 import { FileFinder } from "./utils/file-finder.js";
 import { GitHubClient } from "./utils/github-client.js";
+import { getLocalPatchDiff } from "./utils/local-patch-diff.js";
 
 /**
  * Coverage input configuration
@@ -173,18 +173,6 @@ function verboseLog(message: string, verbose: boolean): void {
   }
 }
 
-function getLocalPatchDiff(baseSha?: string): string {
-  if (!baseSha) {
-    throw new Error("base-sha input is required for local patch diff");
-  }
-
-  core.info(`   Using local git diff from ${baseSha} to HEAD`);
-  return execFileSync("git", ["diff", "--unified=0", baseSha, "HEAD"], {
-    encoding: "utf8",
-    maxBuffer: 100 * 1024 * 1024,
-  });
-}
-
 async function run() {
   try {
     // Get inputs
@@ -279,7 +267,7 @@ async function run() {
         if (githubClient.isPullRequest()) {
           try {
             core.info("🔍 Calculating patch coverage...");
-            const diffContent = getLocalPatchDiff(baseSha);
+            const diffContent = getLocalPatchDiff(baseSha, baseBranch);
             patchCoverage = PatchAnalyzer.analyzePatchCoverage(
               diffContent,
               aggregatedCoverageResults,
