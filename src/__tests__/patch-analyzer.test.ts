@@ -151,6 +151,8 @@ index 83db48f..bf269f4 100644
       mockCoverage,
     );
     expect(result2.totalLines).toBe(0); // Line 99 is not in coverage map, so ignored
+    expect(result2.status).toBe("unavailable");
+    expect(result2.reason).toBe("no executable patch lines found");
   });
 
   it("should include non-deleted changed files and dedupe duplicate entries", () => {

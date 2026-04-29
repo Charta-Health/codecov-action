@@ -213,19 +213,25 @@ export const PatchAnalyzer = {
     }
 
     const totalLines = totalCovered + totalMissed;
-    const status =
+    const unavailableReason =
       matchedFiles.size === 0
-        ? "unavailable"
-        : unmatchedFiles.length > 0
-          ? "incomplete"
-          : "complete";
+        ? "no changed files matched coverage data"
+        : totalLines === 0
+          ? "no executable patch lines found"
+          : undefined;
+    const status = unavailableReason
+      ? "unavailable"
+      : unmatchedFiles.length > 0
+        ? "incomplete"
+        : "complete";
     const percentage =
-      status === "unavailable" || totalLines === 0
-        ? 0
-        : (totalCovered / totalLines) * 100;
+      status === "unavailable" ? 0 : (totalCovered / totalLines) * 100;
 
     // Warn when no changed files could be matched to coverage data
-    if (status === "unavailable" && unmatchedFiles.length > 0) {
+    if (
+      unavailableReason === "no changed files matched coverage data" &&
+      unmatchedFiles.length > 0
+    ) {
       const sampleCoveragePaths = coverageResults.files
         .slice(0, 3)
         .map((f) => f.path);
@@ -235,6 +241,8 @@ export const PatchAnalyzer = {
           `  Sample coverage paths: ${sampleCoveragePaths.join(", ")}\n` +
           `  This usually indicates a path format mismatch between your coverage tool and the repository.`,
       );
+    } else if (status === "unavailable" && unavailableReason) {
+      core.warning(`Patch coverage unavailable: ${unavailableReason}.`);
     } else if (unmatchedFiles.length > 0) {
       core.info(
         `  Some changed files had no coverage data: ${unmatchedFiles.join(", ")}`,
@@ -256,10 +264,7 @@ export const PatchAnalyzer = {
 
     return {
       status,
-      reason:
-        status === "unavailable"
-          ? "no changed files matched coverage data"
-          : undefined,
+      reason: unavailableReason,
       coveredLines: totalCovered,
       missedLines: totalMissed,
       totalLines,

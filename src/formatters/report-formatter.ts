@@ -186,6 +186,10 @@ export class ReportFormatter {
       lines.push(
         `${emoji} Project coverage is **${results.lineRate}%**. Comparing base (${baseRef}) to head (${headRef}).`,
       );
+    } else {
+      lines.push(
+        ":grey_question: Project coverage comparison unavailable: no baseline artifact found.",
+      );
     }
     lines.push("");
 
@@ -523,17 +527,17 @@ export class ReportFormatter {
 
     const patchRate = patchCoverage.percentage.toFixed(2);
     const patchMissedLines = this.countPatchMissedLines(patchBreakdown);
-    const patchEmoji =
-      patchCoverage.status === "complete" &&
-      patchCoverage.percentage < patchTarget
-        ? ":x:"
-        : ":white_check_mark:";
-
-    let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**`;
     if (patchCoverage.status === "incomplete") {
-      patchMessage += `, but incomplete (${patchCoverage.matchedFiles.length} matched files, ${patchCoverage.unmatchedFiles.length} unmatched files)`;
+      let patchMessage = `:warning: Patch coverage is incomplete: **${patchRate}%** from ${patchCoverage.matchedFiles.length} matched files, ${patchCoverage.unmatchedFiles.length} unmatched files.`;
+      if (patchMissedLines > 0) {
+        patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
+      }
+      return patchMessage;
     }
-    patchMessage += ".";
+
+    const patchEmoji =
+      patchCoverage.percentage < patchTarget ? ":x:" : ":white_check_mark:";
+    let patchMessage = `${patchEmoji} Patch coverage is **${patchRate}%**.`;
     if (patchMissedLines > 0) {
       patchMessage += ` PR has **${patchMissedLines}** uncovered ${this.pluralize("line", patchMissedLines)}.`;
     }

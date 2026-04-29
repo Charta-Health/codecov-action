@@ -115,11 +115,11 @@ export const ThresholdChecker = {
     if (patchCoverage.status === "incomplete") {
       return {
         status: "success",
-        description: `${patchCoverage.percentage.toFixed(
+        description: `Patch coverage incomplete: ${patchCoverage.percentage.toFixed(
           2,
-        )}% (incomplete: ${patchCoverage.matchedFiles.length} matched files, ${
+        )}% from ${patchCoverage.matchedFiles.length} matched files, ${
           patchCoverage.unmatchedFiles.length
-        } unmatched files; target ${target}%)`,
+        } unmatched files (target ${target}%)`,
         informational,
       };
     }

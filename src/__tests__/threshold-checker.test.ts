@@ -215,7 +215,7 @@ describe("ThresholdChecker", () => {
         config,
       );
       expect(result.status).toBe("success");
-      expect(result.description).toContain("incomplete");
+      expect(result.description).toContain("Patch coverage incomplete");
       expect(result.description).toContain("1 matched files");
       expect(result.description).toContain("1 unmatched files");
     });

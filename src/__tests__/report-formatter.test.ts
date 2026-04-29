@@ -239,6 +239,17 @@ describe("ReportFormatter", () => {
       ],
     };
 
+    it("should show when project comparison is unavailable", () => {
+      const comment = formatter.formatReport(
+        undefined,
+        coverageWithMissingFiles,
+      );
+
+      expect(comment).toContain(
+        ":grey_question: Project coverage comparison unavailable: no baseline artifact found.",
+      );
+    });
+
     it("should show checkmark when patch coverage meets configured target", () => {
       const coverageResults: AggregatedCoverageResults = {
         totalStatements: 1000,
@@ -667,7 +678,7 @@ describe("ReportFormatter", () => {
         );
 
         expect(comment).toContain(
-          "Patch coverage is **80.00%**, but incomplete (1 matched files, 1 unmatched files).",
+          ":warning: Patch coverage is incomplete: **80.00%** from 1 matched files, 1 unmatched files.",
         );
       });
 
