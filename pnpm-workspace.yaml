@@ -1,3 +1,8 @@
 packages:
   - "."
   - "./website"
+overrides:
+  # @actions/http-client 2.x and @actions/github 6.x pin undici 5.x, which has
+  # unpatched advisories. They only use ProxyAgent and fetch, which are
+  # unchanged in undici 6 (@actions/http-client 3.0.2+ uses undici 6).
+  undici@<6.27.0: ^6.29.0
