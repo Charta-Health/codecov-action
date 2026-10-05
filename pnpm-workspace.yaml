@@ -1,3 +1,16 @@
 packages:
   - "."
   - "./website"
+overrides:
+  # @actions/http-client 2.x and @actions/github 6.x pin undici 5.x, which has
+  # unpatched advisories. They only use ProxyAgent and fetch, which are
+  # unchanged in undici 6 (@actions/http-client 3.0.2+ uses undici 6).
+  #
+  # Remove once nothing resolves undici 5.x on its own, which requires at least:
+  #   @actions/github >= 9.0.0 (8.x and earlier still depend on undici ^5)
+  #   @actions/core >= 2.0.3 (first release on @actions/http-client ^3.0.2)
+  #   @actions/artifact >= 6.0.0 (5.x still pulls @actions/github 6.x)
+  #   @actions/glob >= 0.5.1 (0.5.0 pulls @actions/core 1.x)
+  # Check by deleting this override, running `pnpm install`, and confirming
+  # `pnpm why undici` reports only 6.27.0 or later.
+  undici@<6.27.0: ^6.29.0
