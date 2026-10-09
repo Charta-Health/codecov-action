@@ -19,6 +19,9 @@ export class JUnitParser {
       // Use object form to get the v5.5.10+ default of maxTotalExpansions: Infinity
       // The boolean form still hardcodes maxTotalExpansions: 1000
       processEntities: { enabled: true },
+      // Since v5.7.0, numeric character references such as &#39; and &#10;
+      // are only decoded when htmlEntities is set
+      htmlEntities: true,
     });
   }
 
