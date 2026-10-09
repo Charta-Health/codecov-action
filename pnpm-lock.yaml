@@ -24,8 +24,8 @@ importers:
         specifier: ^0.5.0
         version: 0.5.0
       adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
+        specifier: ^0.6.1
+        version: 0.6.1
       fast-xml-parser:
         specifier: ^5.11.2
         version: 5.11.2
@@ -54,9 +54,6 @@ importers:
       '@rollup/plugin-typescript':
         specifier: ^12.3.0
         version: 12.3.0(rollup@4.63.5)(tslib@2.8.1)(typescript@5.9.3)
-      '@types/adm-zip':
-        specifier: ^0.5.7
-        version: 0.5.7
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -1423,9 +1420,6 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@types/adm-zip@0.5.7':
-    resolution: {integrity: sha512-DNEs/QvmyRLurdQPChqq0Md4zGvPwHerAJYWk9l2jCbD1VPpnzRJorOdiq4zsw09NFbYnhfsoEhWtxIzXpn2yw==}
-
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
 
@@ -1555,9 +1549,9 @@ packages:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
     engines: {node: '>=6.5'}
 
-  adm-zip@0.5.16:
-    resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
-    engines: {node: '>=12.0'}
+  adm-zip@0.6.1:
+    resolution: {integrity: sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ==}
+    engines: {node: '>=14.0'}
 
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
@@ -3933,10 +3927,6 @@ snapshots:
       '@tanstack/query-core': 5.95.2
       react: 19.2.4
 
-  '@types/adm-zip@0.5.7':
-    dependencies:
-      '@types/node': 24.10.1
-
   '@types/babel__core@7.20.5':
     dependencies:
       '@babel/parser': 7.28.5
@@ -4104,7 +4094,7 @@ snapshots:
     dependencies:
       event-target-shim: 5.0.1
 
-  adm-zip@0.5.16: {}
+  adm-zip@0.6.1: {}
 
   agent-base@7.1.4: {}
 
