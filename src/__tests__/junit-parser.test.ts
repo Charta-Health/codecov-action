@@ -52,6 +52,44 @@ Error: Expected 5 to equal 6
       expect(failedTest.failure?.content).toContain("at Object.toBe");
     });
 
+    it("should decode named and numeric entities in failure messages", () => {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" failures="1">
+  <testsuite name="Suite &amp; more" failures="1" tests="1">
+    <testcase classname="test/example.test.ts" name="renders &lt;div&gt;" time="0.1">
+      <failure message="expected &#39;a&#39; to equal &quot;b&quot;&#10;at line 2 &#x41;">expected &lt;div&gt; &amp; &apos;b&apos;</failure>
+    </testcase>
+  </testsuite>
+</testsuites>`;
+
+      const result = parser.parseXML(xml);
+      const testcase = result.testsuites[0].testcases[0];
+
+      expect(result.testsuites[0].name).toBe("Suite & more");
+      expect(testcase.name).toBe("renders <div>");
+      expect(testcase.failure?.message).toBe(
+        "expected 'a' to equal \"b\"\nat line 2 A",
+      );
+      expect(testcase.failure?.content).toBe("expected <div> & 'b'");
+    });
+
+    it("should not cap entity expansion on large reports", () => {
+      const testcases = Array.from(
+        { length: 2000 },
+        (_, i) =>
+          `<testcase classname="c" name="t${i} &lt;&gt;" time="0"><failure message="&lt;a&gt; &amp; &#39;b&#39;">&lt;x&gt;</failure></testcase>`,
+      ).join("");
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Large" tests="2000" failures="2000">${testcases}</testsuite>`;
+
+      const result = parser.parseXML(xml);
+      const last = result.testsuites[0].testcases[1999];
+
+      expect(result.testsuites[0].testcases).toHaveLength(2000);
+      expect(last.name).toBe("t1999 <>");
+      expect(last.failure?.message).toBe("<a> & 'b'");
+    });
+
     it("should parse JUnit XML with skipped tests", () => {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuites name="jest tests" tests="2" failures="0" errors="0" time="1.007">
